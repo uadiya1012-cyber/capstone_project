@@ -1,0 +1,12 @@
+{% extends 'base.html' %} {% block content %}
+<h1>{{ budget.name }}</h1>
+<p>Total: {{ budget.total_amount }}</p>
+<h2>Allocations</h2>
+<ul>
+  {% for a in allocations %}
+  <li>{{ a.category }} — {{ a.amount }}</li>
+  {% empty %}
+  <li>No allocations.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

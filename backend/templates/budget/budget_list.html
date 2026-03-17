@@ -1,0 +1,18 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Budgets</h1>
+
+<form method="post">
+  {% csrf_token %} {{ form.as_p }}
+  <button type="submit">Create Budget</button>
+</form>
+<ul>
+  {% for b in budgets %}
+  <li>
+    <a href="{{ b.get_absolute_url|default:'#' }}">{{ b.name }}</a> — {{
+    b.total_amount }}
+  </li>
+  {% empty %}
+  <li>No budgets yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

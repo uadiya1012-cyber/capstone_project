@@ -1,0 +1,10 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Categories</h1>
+<ul>
+  {% for c in categories %}
+  <li><a href="{{ c.get_absolute_url|default:'#' }}">{{ c.name }}</a></li>
+  {% empty %}
+  <li>No categories yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

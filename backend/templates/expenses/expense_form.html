@@ -1,0 +1,17 @@
+{% extends 'base.html' %} {% block content %}
+<section class="container">
+  <h3>Add Expense</h3>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="grid">
+      {{ form.amount }} {{ form.category }} {{ form.date }}
+    </div>
+
+    {{ form.description }}
+
+    <button type="submit">Add Expense</button>
+  </form>
+</section>
+{% endblock %}
