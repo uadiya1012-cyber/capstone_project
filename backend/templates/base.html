@@ -1,0 +1,24 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="{% static 'css/pico.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+    <script src="{% static 'js/pico.min.js' %}"></script>
+  </head>
+  <body>
+    {% include 'includes/navbar.html' %}
+
+    <main>{% block content %}{% endblock %}</main>
+
+    {% include 'includes/footer.html' %}
+
+    <!-- Charts and app scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
+  </body>
+</html>

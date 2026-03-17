@@ -1,0 +1,11 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Expenses</h1>
+<p>Total: {{ total }}</p>
+<ul>
+  {% for e in expenses %}
+  <li>{{ e.date }} — {{ e.amount }} — {{ e.category }}</li>
+  {% empty %}
+  <li>No expenses.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
