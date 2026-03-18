@@ -403,17 +403,7 @@ body {
 }
 
 /* Chart Area */
-.chart-area {
-  background: white;
-  height: 350px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9ca3af;
-  font-size: 18px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
+/* Chart-area was unused in templates; remove to keep stylesheet focused. */
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -471,6 +461,17 @@ body {
   max-width: 900px;
 }
 
+/* Utilities: small layout helpers used by templates */
+/* Add spacing between stacked cards instead of inline styles in templates */
+.card + .card {
+  margin-top: 12px;
+}
+
+/* small top spacing for forms inside cards (replaces inline style="margin-top:8px") */
+.card form {
+  margin-top: 8px;
+}
+
 /* active nav state for dashboard sidebar */
 .nav-item.active {
   background: #0b63d4;
@@ -483,6 +484,74 @@ body {
   height: 40px;
   border-radius: 50%;
   background: #ddd;
+}
+
+/* Compatibility / Utilities (cover classes used in templates but defined by Pico or missing)
+   Keeping these here avoids changing many templates and ensures consistent visuals */
+.btn,
+.button {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: #fff;
+  color: #0b63d4;
+}
+
+.btn-primary {
+  /* keep existing visual for primary */
+  background-color: #fff;
+  color: #667eea;
+  border-color: #fff;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: white;
+  border-color: white;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+.alert-danger {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 /* ===== FOOTER ===== */
