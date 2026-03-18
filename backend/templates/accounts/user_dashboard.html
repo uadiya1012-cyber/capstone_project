@@ -5,7 +5,7 @@
   <aside class="sidebar">
     <div class="profile">
       <div>
-        <h4 style="margin: 0">{{ user.username }}</h4>
+        <h4>{{ user.username }}</h4>
         <small class="muted">Member</small>
       </div>
     </div>
@@ -52,7 +52,7 @@
           </div>
         </div>
 
-        <div class="card" style="margin-top: 12px">
+  <div class="card">
           <h5>Spending by Category</h5>
           <div class="chart-wrapper">
             <canvas id="chart-by-category"></canvas>
@@ -75,7 +75,7 @@
 
           <hr />
           <h6>Can't find a category?</h6>
-          <form method="post" style="margin-top:8px">
+          <form method="post">
             {% csrf_token %}
             {% if cat_form %}
               {{ cat_form.name.errors }}
@@ -91,6 +91,7 @@
             {% else %}
               <p>Category form not available.</p>
             {% endif %}
+            
           </form>
         </div>
       </div>

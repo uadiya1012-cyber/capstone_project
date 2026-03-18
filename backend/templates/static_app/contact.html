@@ -2,11 +2,37 @@
 <div class="container">
   <h1>Contact Us</h1>
   <p>
-    If you have any questions, feedback, or need assistance, please feel free to
-    reach out to us. We are here to help!
+    If you have any questions, feedback, or need assistance, please fill the
+    form below.
   </p>
-  <ul>
-    <li>Email: <a href="mailto:info@example.com">info@example.com</a></li>
-  </ul>
+
+  {% if messages %} {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %} {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_name" class="form-label">Name</label>
+      {{ form.name }}
+    </div>
+    <div class="mb-3">
+      <label for="id_email" class="form-label">Email</label>
+      {{ form.email }}
+    </div>
+    <div class="mb-3">
+      <label for="id_subject" class="form-label">Subject (optional)</label>
+      {{ form.subject }}
+    </div>
+    <div class="mb-3">
+      <label for="id_phone" class="form-label">Phone (optional)</label>
+      {{ form.phone }}
+    </div>
+    <div class="mb-3">
+      <label for="id_message" class="form-label">Message</label>
+      {{ form.message }}
+    </div>
+    <button type="submit" class="btn btn-primary">Send</button>
+  </form>
 </div>
 {% endblock %}

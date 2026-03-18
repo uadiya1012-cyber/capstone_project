@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Category, models
+from .models import Category
+from django.db.models import Q
 from .forms import CategoryForm
 from accounts.decorators import role_required
 from django.contrib import messages
@@ -8,7 +9,7 @@ from django.contrib import messages
 @login_required
 def category_list(request):
     # Global categories (user is none) болон нийтэд зориулсан категориудыг харуулах
-    categories = Category.objects.filter(models.Q(user__isnull=True) | models.Q(user=request.user)).order_by('name')
+    categories = Category.objects.filter(Q(user__isnull=True) | Q(user=request.user)).order_by('name')
     return render(request, 'category/category_list.html', {'categories': categories})
 
 @login_required

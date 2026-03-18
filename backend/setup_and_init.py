@@ -17,7 +17,6 @@ django.setup()
 
 from django.core.management import call_command
 from django.contrib.auth import get_user_model
-from accounts.models import CustomUser
 from category.models import Category
 from budget.models import Budget, BudgetAllocation
 from expenses.models import Expense
