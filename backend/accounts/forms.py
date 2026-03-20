@@ -26,3 +26,5 @@ class CustomUserCreationForm(UserCreationForm):
             user.save()
         return user
 
+
+# Энд код нь CustomUserCreationForm нэртэй форм үүсгэж байна. Энэ форм нь UserCreationForm-аас өвлөн авч, email гэсэн шинэ талбар нэмсэн. clean_email() метод нь имэйл хаяг аль хэдийн ашиглагдсан эсэхийг шалгаж, хэрэв ашиглагдсан бол ValidationError-ыг үүсгэнэ. save() метод нь хэрэглэгчийг хадгалахдаа email талбарыг зөвшөөрөгдсөн утгаар хадгална.

@@ -1,134 +1,94 @@
 {% extends 'base.html' %} {% block content %}
 
-<div class="dashboard-layout container">
+<!-- Custom Google Fonts for modern look -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<div class="dashboard-layout container bento-dashboard">
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar glass-sidebar">
     <div class="profile">
       <div>
         <h4>{{ user.username }}</h4>
-        <small class="muted">Member</small>
+        <small class="muted">Premium Member</small>
       </div>
     </div>
-
     <div class="nav-item active" data-view="dashboard">Dashboard</div>
-  <div class="nav-item" data-view="expenses">Expenses</div>
-    <div class="nav-item" data-view="transactions">Transactions</div>
     <div class="nav-item" data-view="budget">Budget</div>
-    <div class="nav-item" data-view="reports">Reports</div>
     <div class="nav-item" data-view="saving_goals">Saving Goals</div>
     <div class="nav-item" data-view="profile">Profile</div>
-    
-    <!-- Quick Create removed from sidebar — it appears in the Expenses view on the right -->
   </aside>
 
   <!-- MAIN -->
-  <section class="main">
-    <!-- Top summary cards (always visible) -->
-    <div class="stats">
-      <div class="card">
-        <h5>User</h5>
-        <h3>{{ user.username }}</h3>
-      </div>
-
-      <div class="card">
-        <h5>Expenses</h5>
-        <h3>{{ user.expenses.count }}</h3>
-      </div>
-
-      <div class="card">
-        <h5>Budgets</h5>
-        <h3>{{ user.budgets.count }}</h3>
-      </div>
+  <section class="main glass-main">
+    <div class="bento-header">
+      <h2>Welcome back, {{ user.username }}</h2>
+      <p class="muted">Here's your financial overview for today.</p>
     </div>
 
-    <!-- Харагдах хэсэг: Графикууд ээлжлэн харагдах болно -->
+    <!-- Views Area -->
     <div id="views">
-      <!-- Dashboard: overview charts -->
+      
+      <!-- DASHBOARD VIEW: BENTO GRID -->
       <div id="view-dashboard" class="view active">
-        <div class="card">
-          <h5>Overview — Monthly Expenses</h5>
-          <div class="chart-wrapper">
-            <canvas id="chart-monthly-expenses"></canvas>
+        <div class="bento-grid">
+          
+          <!-- Top summary cards -->
+          <div class="glass-card bento-item stats-card" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">
+            <h5 style="color: rgba(255,255,255,0.8);">Total Balance</h5>
+            <h2 style="color: white; font-weight: 700; margin-top: 5px;">$0.00</h2>
           </div>
-        </div>
-
-  <div class="card">
-          <h5>Spending by Category</h5>
-          <div class="chart-wrapper">
-            <canvas id="chart-by-category"></canvas>
+          <div class="glass-card bento-item stats-card">
+            <h5>Monthly Expenses</h5>
+            <h2 style="color: #e15759; margin-top: 5px; font-weight: 700;">$0.00</h2>
           </div>
-        </div>
-      </div>
+          <div class="glass-card bento-item stats-card">
+            <h5>Monthly Budget</h5>
+            <h2 style="color: #59a14f; margin-top: 5px; font-weight: 700;">$0.00</h2>
+          </div>
 
-      <div id="view-expenses" class="view">
-        <div class="card">
-          <h5>Add New Expense</h5>
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% if exp_form %}
-              {{ exp_form.as_p }}
-            {% else %}
-              <p>Expense form not available.</p>
-            {% endif %}
-            <button type="submit" class="btn">Add Expense</button>
-          </form>
+          <!-- Main Chart -->
+          <div class="glass-card bento-item bento-large">
+            <h5>Overview — Monthly Expenses</h5>
+            <div class="chart-wrapper">
+              <canvas id="chart-monthly-expenses"></canvas>
+            </div>
+          </div>
 
-          <hr />
-          <h6>Can't find a category?</h6>
-          <form method="post">
-            {% csrf_token %}
-            {% if cat_form %}
-              {{ cat_form.name.errors }}
-              <div class="form-group">
-                {{ cat_form.name.label_tag }}
-                {{ cat_form.name }}
-              </div>
-              <div class="form-group">
-                {{ cat_form.description.label_tag }}
-                {{ cat_form.description }}
-              </div>
-              <button type="submit" name="create_category" class="btn-secondary">Create Category</button>
-            {% else %}
-              <p>Category form not available.</p>
-            {% endif %}
-            
-          </form>
-        </div>
-      </div>
+          <!-- Doughnut Chart -->
+          <div class="glass-card bento-item bento-tall">
+            <h5>Spending by Category</h5>
+            <div class="chart-wrapper">
+              <canvas id="chart-by-category"></canvas>
+            </div>
+          </div>
 
-      <!-- Transactions: recent transaction trend -->
-      <div id="view-transactions" class="view">
-        <div class="card">
-          <h5>Transactions — Last 30 days</h5>
-          <div class="chart-wrapper">
-            <canvas id="chart-transactions"></canvas>
+          <!-- Recent Transactions (List) -->
+          <div class="glass-card bento-item bento-large">
+            <h5>Recent Transactions</h5>
+            <ul class="clean-list">
+              <li><span class="muted" style="margin-right: 10px;">Today</span> <strong>Uber</strong> <span style="float:right;color:#e15759;font-weight:600;">-$15.00</span></li>
+              <li><span class="muted" style="margin-right: 10px;">Yesterday</span> <strong>Grocery</strong> <span style="float:right;color:#e15759;font-weight:600;">-$120.50</span></li>
+              <li><span class="muted" style="margin-right: 10px;">Mar 15</span> <strong>Salary</strong> <span style="float:right;color:#59a14f;font-weight:600;">+$3,200.00</span></li>
+            </ul>
           </div>
         </div>
       </div>
 
-      <!-- Budget: budget vs spent -->
+      <!-- BUDGET VIEW -->
       <div id="view-budget" class="view">
-        <div class="card">
-          <h5>Budget Status</h5>
+        <div class="glass-card bento-item bento-large" style="margin-top: 25px;">
+          <h5>Budget vs Spent</h5>
           <div class="chart-wrapper">
             <canvas id="chart-budget"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Reports: example report chart -->
-      <div id="view-reports" class="view">
-        <div class="card">
-          <h5>Yearly Report</h5>
-          <div class="chart-wrapper">
-            <canvas id="chart-yearly"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Saving Goals: progress rings / bars -->
+      <!-- SAVING GOALS VIEW -->
       <div id="view-saving_goals" class="view">
-        <div class="card">
+        <div class="glass-card bento-item bento-large" style="margin-top: 25px;">
           <h5>Saving Goals Progress</h5>
           <div class="chart-wrapper">
             <canvas id="chart-savings"></canvas>
@@ -136,15 +96,112 @@
         </div>
       </div>
 
+      <!-- PROFILE VIEW -->
       <div id="view-profile" class="view">
-        <div class="card">
+        <div class="glass-card bento-item bento-large" style="margin-top: 25px;">
           <h5>Profile Information</h5>
-          <p><strong>Username:</strong> {{ user.username }}</p>
-          <p><strong>Email:</strong> {{ user.email }}</p>
-          <p><strong>Joined:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
+          <div style="margin-top: 15px; font-size: 16px;">
+            <p style="margin-bottom: 8px;"><strong>Username:</strong> {{ user.username }}</p>
+            <p style="margin-bottom: 8px;"><strong>Email:</strong> {{ user.email }}</p>
+            <p style="margin-bottom: 8px;"><strong>Joined:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
+          </div>
         </div>
+      </div>
+      
     </div>
   </section>
 </div>
+
+<!-- FLOATING ACTION BUTTON -->
+<div class="fab-container">
+  <button class="fab-btn" onclick="toggleFabModal()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </button>
+</div>
+
+<!-- FLOATING ACTION WIZARD MODAL -->
+<div class="fab-modal-overlay d-none" id="fab-wizard-modal">
+  <div class="fab-modal-content glass-modal">
+    <div class="fab-modal-header">
+      <h4>Create New Entry</h4>
+      <button class="close-btn" onclick="toggleFabModal()">&times;</button>
+    </div>
+    
+    <div class="wizard-container">
+      <!-- Stepper header -->
+      <div class="wizard-steps bento-wizard-steps">
+        <div class="step active" id="wizard-step-indicator-1">1. Category</div>
+        <div class="step" id="wizard-step-indicator-2">2. Budget</div>
+        <div class="step" id="wizard-step-indicator-3">3. Expense</div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" id="expenses-wizard-form">
+        {% csrf_token %}
+        
+        <!-- STEP 1: CATEGORY -->
+        <div class="wizard-step" id="wizard-step-1">
+          <h6 class="step-title">Step 1: Create a Category</h6>
+          {{ cat_form.as_p }}
+          <div class="wizard-actions right-align">
+            <button type="button" class="btn btn-modern" onclick="goToWizardStep(2)">Next ➔</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: BUDGET -->
+        <div class="wizard-step d-none" id="wizard-step-2">
+          <h6 class="step-title">Step 2: Set a Budget</h6>
+          <p class="muted step-desc" style="margin-bottom: 15px; font-size: 14px;">Set a budget limit. If no category is selected, the system may link it to the newly created category from Step 1.</p>
+          {{ bud_form.as_p }}
+          <div class="wizard-actions space-between">
+            <button type="button" class="btn btn-modern-sec" onclick="goToWizardStep(1)">⬅ Prev</button>
+            <button type="button" class="btn btn-modern" onclick="goToWizardStep(3)">Next ➔</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: EXPENSE -->
+        <div class="wizard-step d-none" id="wizard-step-3">
+          <h6 class="step-title">Step 3: Add the Expense</h6>
+          {% if exp_form %}
+          {{ exp_form.as_p }}
+          {% else %}
+          <p>Expense form not available.</p>
+          {% endif %}
+          <div class="wizard-actions space-between">
+            <button type="button" class="btn btn-modern-sec" onclick="goToWizardStep(2)">⬅ Prev</button>
+            <button type="submit" class="btn btn-modern-submit">Submit All ✔</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleFabModal() {
+    const modal = document.getElementById('fab-wizard-modal');
+    if (modal.classList.contains('d-none')) {
+      modal.classList.remove('d-none');
+    } else {
+      modal.classList.add('d-none');
+    }
+  }
+
+  function goToWizardStep(step) {
+    document.getElementById('wizard-step-1').classList.add('d-none');
+    document.getElementById('wizard-step-2').classList.add('d-none');
+    document.getElementById('wizard-step-3').classList.add('d-none');
+
+    for (let i = 1; i <= 3; i++) {
+      let indicator = document.getElementById('wizard-step-indicator-' + i);
+      if (i === step) {
+        indicator.classList.add('active');
+      } else {
+        indicator.classList.remove('active');
+      }
+    }
+
+    document.getElementById('wizard-step-' + step).classList.remove('d-none');
+  }
+</script>
 
 {% endblock %}

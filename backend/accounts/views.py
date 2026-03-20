@@ -27,10 +27,7 @@ def register(request):
 
 @login_required
 def user_dashboard(request):
-    """Dashboard view with embedded quick-create functionality in sidebar.
-
-    Handles GET to show the dashboard and the three forms (prefixed).
-    Handles POST to validate and save Category, Budget and Expense atomically.
+    """Энэ view нь хэрэглэгчийн dashboard-г харуулах бөгөөд эндээс хэрэглэгч category, budget, expense-ийг нэг дор үүсгэх боломжтой. POST хүсэлт ирсэн тохиолдолд, form-уудыг шалгаж, хэрэв зөв бол transaction.atomic() блок дотор бүх объектыг хадгална. GET хүсэлт ирсэн тохиолдолд хоосон form-уудыг үүсгэнэ. Мөн expense формын category сонголтыг зөвхөн global болон тухайн хэрэглэгчийн категориудаар хязгаарлана.
     """
     if request.method == 'POST':
         # Distinguish between creating a standalone category and creating all 3 items.
@@ -99,3 +96,6 @@ def moderator_dashboard(request):
 @role_required(allowed_roles=['ADMIN'])
 def admin_settings(request):
     return render(request, 'accounts/admin_settings.html')
+
+
+#  Энд код нь хэрэглэгчийн бүртгэл, dashboard, moderator болон admin view-уудыг агуулж байна. user_dashboard view нь хэрэглэгчид category, budget, expense-ийг нэг дор үүсгэх боломжийг олгодог бөгөөд POST хүсэлт ирсэн тохиолдолд form-уудыг шалгаж, transaction.atomic() блок дотор бүх объектыг хадгална. GET хүсэлт ирсэн тохиолдолд хоосон form-уудыг үүсгэнэ. Мөн expense формын category сонголтыг зөвхөн global болон тухайн хэрэглэгчийн категориудаар хязгаарлана. moderator_dashboard болон admin_settings view-ууд нь зөвхөн тодорхой үүрэгтэй хэрэглэгчдэд л хандах боломжтой.

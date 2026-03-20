@@ -12,3 +12,6 @@ def role_required(allowed_roles=[]):
             
         return wrap
     return decorator
+
+
+# Энд код нь role_required нэртэй декоратор үүсгэж байна. Энэ декоратор нь allowed_roles гэсэн параметрийг авч, тухайн view-д зөвшөөрөгдсөн үүрэгтэй хэрэглэгчид л хандах боломжийг олгоно. Хэрэв хэрэглэгч нэвтэрсэн бөгөөд түүний үүрэг allowed_roles-д байгаа бол view-г ажиллуулна, эс тэгвээс HttpResponseForbidden-ыг буцаана.
