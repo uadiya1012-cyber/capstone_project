@@ -27,9 +27,19 @@ document.addEventListener("DOMContentLoaded", function () {
   // Example chart initializers. Replace sample data with real context/JSON as needed.
   function initChartForView(view) {
     if (charts[view]) return; // already created
+    
+    // Parse the embedded JSON data
+    let chartData = null;
+    const dataEl = document.getElementById("chart-data");
+    if (dataEl) {
+      try {
+        chartData = JSON.parse(dataEl.textContent);
+      } catch(e) { console.error("Could not parse chart data", e); }
+    }
 
     const cfg = {
       dashboard: () => {
+        if (!chartData) return;
         // monthly expenses - line
         const el = document.getElementById("chart-monthly-expenses");
         if (el) {
@@ -38,25 +48,13 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "line",
             data: {
               labels: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
               ],
               datasets: [
                 {
                   label: "Expenses",
-                  data: [
-                    500, 700, 650, 800, 750, 900, 700, 850, 950, 700, 600, 800,
-                  ],
+                  data: chartData.monthly_data,
                   borderColor: "#0b63d4",
                   backgroundColor: "rgba(11,99,212,0.08)",
                 },
@@ -72,16 +70,12 @@ document.addEventListener("DOMContentLoaded", function () {
           charts.dashboard_cat = new Chart(ctx2, {
             type: "doughnut",
             data: {
-              labels: ["Food", "Rent", "Transport", "Utilities", "Other"],
+              labels: chartData.cat_labels,
               datasets: [
                 {
-                  data: [300, 900, 120, 80, 50],
+                  data: chartData.cat_values,
                   backgroundColor: [
-                    "#4e79a7",
-                    "#f28e2b",
-                    "#e15759",
-                    "#76b7b2",
-                    "#59a14f",
+                    "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
                   ],
                 },
               ],
@@ -102,9 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
             datasets: [
               {
                 label: "Transactions",
-                data: Array.from({ length: 30 }, () =>
-                  Math.floor(Math.random() * 6),
-                ),
+                data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 6)),
                 backgroundColor: "#0b63d4",
               },
             ],
@@ -114,22 +106,23 @@ document.addEventListener("DOMContentLoaded", function () {
       },
 
       budget: () => {
+        if (!chartData) return;
         const el = document.getElementById("chart-budget");
         if (!el) return;
         const ctx = el.getContext("2d");
         charts.budget = new Chart(ctx, {
           type: "bar",
           data: {
-            labels: ["Groceries", "Rent", "Entertainment", "Savings"],
+            labels: chartData.budget_labels,
             datasets: [
               {
                 label: "Budgeted",
-                data: [400, 1200, 200, 600],
+                data: chartData.budget_allocated,
                 backgroundColor: "#76b7b2",
               },
               {
                 label: "Spent",
-                data: [350, 1200, 190, 250],
+                data: chartData.budget_spent,
                 backgroundColor: "#e15759",
               },
             ],
