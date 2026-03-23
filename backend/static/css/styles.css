@@ -184,7 +184,7 @@ body {
   font-weight: 600;
 }
 
-.card + .card {
+.card+.card {
   margin-top: 12px;
 }
 
@@ -429,7 +429,9 @@ footer p {
   background-color: #f8f9fa;
   border-radius: 10px;
   text-align: center;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
 }
 
 .feature-card:hover {
@@ -476,7 +478,9 @@ footer p {
   border-radius: 10px;
   text-align: center;
   border-left: 4px solid #667eea;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
 }
 
 .step-card:hover {
@@ -569,8 +573,9 @@ footer p {
 /*                          BENTO & GLASSMORPHISM UI                         */
 /* ========================================================================= */
 body {
-  font-family: 'Outfit', 'Inter', sans-serif;
-  background: #f0f4f8; /* Modern light background */
+  font-family: "Outfit", "Inter", sans-serif;
+  background: #f0f4f8;
+  /* Modern light background */
 }
 
 .bento-dashboard {
@@ -631,7 +636,9 @@ body {
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .glass-card:hover {
@@ -651,7 +658,7 @@ body {
   grid-column: span 2;
 }
 
-@media(max-width: 992px) {
+@media (max-width: 992px) {
   .bento-large {
     grid-column: span 1;
   }
@@ -669,9 +676,10 @@ body {
 
 .clean-list li {
   padding: 12px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   font-size: 15px;
 }
+
 .clean-list li:last-child {
   border-bottom: none;
 }
@@ -696,7 +704,9 @@ body {
   justify-content: center;
   box-shadow: 0 10px 25px rgba(11, 99, 212, 0.4);
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
 }
 
 .fab-btn:hover {
@@ -707,8 +717,11 @@ body {
 /* Modal Overlay */
 .fab-modal-overlay {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
@@ -727,19 +740,33 @@ body {
   padding: 30px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.7);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(40px) scale(0.95); opacity: 0;}
-  to { transform: translateY(0) scale(1); opacity: 1;}
+  from {
+    transform: translateY(40px) scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 .fab-modal-header {
@@ -803,8 +830,14 @@ body {
   margin-top: 20px;
 }
 
-.right-align { text-align: right; }
-.space-between { display: flex; justify-content: space-between; }
+.right-align {
+  text-align: right;
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+}
 
 .btn-modern {
   background: #0b63d4;
@@ -816,7 +849,10 @@ body {
   font-weight: 600;
   transition: background 0.2s;
 }
-.btn-modern:hover { background: #0a4fbc; }
+
+.btn-modern:hover {
+  background: #0a4fbc;
+}
 
 .btn-modern-sec {
   background: #e9ecef;
@@ -828,7 +864,10 @@ body {
   font-weight: 600;
   transition: background 0.2s;
 }
-.btn-modern-sec:hover { background: #dee2e6; }
+
+.btn-modern-sec:hover {
+  background: #dee2e6;
+}
 
 .btn-modern-submit {
   background: #59a14f;
@@ -839,4 +878,7 @@ body {
   cursor: pointer;
   font-weight: 600;
 }
-.d-none { display: none; }
+
+.d-none {
+  display: none;
+}

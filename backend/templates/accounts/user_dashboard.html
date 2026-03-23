@@ -128,53 +128,100 @@
     </div>
     
     <div class="wizard-container">
-      <!-- Stepper header -->
+      <!-- Tabs header -->
       <div class="wizard-steps bento-wizard-steps">
-        <div class="step active" id="wizard-step-indicator-1">1. Category</div>
-        <div class="step" id="wizard-step-indicator-2">2. Budget</div>
-        <div class="step" id="wizard-step-indicator-3">3. Expense</div>
+        <div class="step active" style="cursor: pointer;" id="tab-indicator-1" onclick="goToTab(1)">Expense</div>
+        <div class="step" style="cursor: pointer;" id="tab-indicator-2" onclick="goToTab(2)">Budget</div>
+        <div class="step" style="cursor: pointer;" id="tab-indicator-3" onclick="goToTab(3)">Category</div>
       </div>
 
-      <form method="post" enctype="multipart/form-data" id="expenses-wizard-form">
-        {% csrf_token %}
-        
-        <!-- STEP 1: CATEGORY -->
-        <div class="wizard-step" id="wizard-step-1">
-          <h6 class="step-title">Step 1: Create a Category</h6>
-          {{ cat_form.as_p }}
+      <!-- TAB 1: EXPENSE -->
+      <div class="wizard-step" id="tab-content-1">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <h6 class="step-title">Add an Expense</h6>
+          {% for field in exp_form %}
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label for="{{ field.id_for_label }}" style="display:block; margin-bottom:5px; font-weight:500;">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+              {% for error in field.errors %}<div style="color:red; font-size: 13px;">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
           <div class="wizard-actions right-align">
-            <button type="button" class="btn btn-modern" onclick="goToWizardStep(2)">Next ➔</button>
+            <button type="submit" name="create_expense" class="btn btn-modern">Save Expense ✔</button>
           </div>
-        </div>
+        </form>
+      </div>
 
-        <!-- STEP 2: BUDGET -->
-        <div class="wizard-step d-none" id="wizard-step-2">
-          <h6 class="step-title">Step 2: Set a Budget</h6>
-          <p class="muted step-desc" style="margin-bottom: 15px; font-size: 14px;">Set a budget limit. If no category is selected, the system may link it to the newly created category from Step 1.</p>
-          {{ bud_form.as_p }}
-          <div class="wizard-actions space-between">
-            <button type="button" class="btn btn-modern-sec" onclick="goToWizardStep(1)">⬅ Prev</button>
-            <button type="button" class="btn btn-modern" onclick="goToWizardStep(3)">Next ➔</button>
+      <!-- TAB 2: BUDGET -->
+      <div class="wizard-step d-none" id="tab-content-2">
+        <form method="post">
+          {% csrf_token %}
+          <h6 class="step-title">Set a Budget</h6>
+          {% for field in bud_form %}
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label for="{{ field.id_for_label }}" style="display:block; margin-bottom:5px; font-weight:500;">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+              {% for error in field.errors %}<div style="color:red; font-size: 13px;">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+          <div class="wizard-actions right-align">
+            <button type="submit" name="create_budget" class="btn btn-modern">Save Budget ✔</button>
           </div>
-        </div>
+        </form>
+      </div>
 
-        <!-- STEP 3: EXPENSE -->
-        <div class="wizard-step d-none" id="wizard-step-3">
-          <h6 class="step-title">Step 3: Add the Expense</h6>
-          {% if exp_form %}
-          {{ exp_form.as_p }}
-          {% else %}
-          <p>Expense form not available.</p>
-          {% endif %}
-          <div class="wizard-actions space-between">
-            <button type="button" class="btn btn-modern-sec" onclick="goToWizardStep(2)">⬅ Prev</button>
-            <button type="submit" class="btn btn-modern-submit">Submit All ✔</button>
+      <!-- TAB 3: CATEGORY -->
+      <div class="wizard-step d-none" id="tab-content-3">
+        <form method="post">
+          {% csrf_token %}
+          <h6 class="step-title">Create a Category</h6>
+          {% for field in cat_form %}
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label for="{{ field.id_for_label }}" style="display:block; margin-bottom:5px; font-weight:500;">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+              {% for error in field.errors %}<div style="color:red; font-size: 13px;">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+          <div class="wizard-actions right-align">
+            <button type="submit" name="create_category" class="btn btn-modern">Save Category ✔</button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+  /* Improved styles for form controls */
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.7);
+    font-family: inherit;
+    font-size: 14px;
+    color: #333;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #0b63d4;
+    background: #fff;
+  }
+  .form-group input[type="file"] {
+    padding: 6px;
+  }
+  .form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+</style>
 
 <script>
   function toggleFabModal() {
@@ -186,22 +233,25 @@
     }
   }
 
-  function goToWizardStep(step) {
-    document.getElementById('wizard-step-1').classList.add('d-none');
-    document.getElementById('wizard-step-2').classList.add('d-none');
-    document.getElementById('wizard-step-3').classList.add('d-none');
+  function goToTab(tab) {
+    document.getElementById('tab-content-1').classList.add('d-none');
+    document.getElementById('tab-content-2').classList.add('d-none');
+    document.getElementById('tab-content-3').classList.add('d-none');
 
     for (let i = 1; i <= 3; i++) {
-      let indicator = document.getElementById('wizard-step-indicator-' + i);
-      if (i === step) {
+      let indicator = document.getElementById('tab-indicator-' + i);
+      if (i === tab) {
         indicator.classList.add('active');
       } else {
         indicator.classList.remove('active');
       }
     }
 
-    document.getElementById('wizard-step-' + step).classList.remove('d-none');
+    document.getElementById('tab-content-' + tab).classList.remove('d-none');
   }
 </script>
+
+<!-- Embedded Chart Data from Django View -->
+{{ chart_data_json|json_script:"chart-data" }}
 
 {% endblock %}
