@@ -2,9 +2,23 @@
 // Extracted from user_dashboard template to central static file.
 
 document.addEventListener("DOMContentLoaded", function () {
-  const navItems = document.querySelectorAll(".nav-item");
+  const navItems = document.querySelectorAll(".nav-item, .nav-btn");
   const views = document.querySelectorAll(".view");
   const charts = {}; // store Chart instances to avoid re-creating
+
+  // --- Dynamic Greeting ---
+  const greetingEl = document.getElementById("dynamic-greeting");
+  if (greetingEl) {
+    const hour = new Date().getHours();
+    let greeting = "Welcome back";
+    if (hour < 12) greeting = "Good morning";
+    else if (hour < 18) greeting = "Good afternoon";
+    else greeting = "Good evening";
+    
+    const currentText = greetingEl.innerText;
+    const username = currentText.replace("Welcome back, ", "");
+    greetingEl.innerText = `${greeting}, ${username}`;
+  }
 
   function showView(name) {
     views.forEach((v) => v.classList.remove("active"));
@@ -44,6 +58,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const el = document.getElementById("chart-monthly-expenses");
         if (el) {
           const ctx = el.getContext("2d");
+          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+          gradient.addColorStop(0, "rgba(11,99,212,0.4)");
+          gradient.addColorStop(1, "rgba(11,99,212,0.0)");
+
           charts.dashboard_monthly = new Chart(ctx, {
             type: "line",
             data: {
@@ -56,11 +74,28 @@ document.addEventListener("DOMContentLoaded", function () {
                   label: "Expenses",
                   data: chartData.monthly_data,
                   borderColor: "#0b63d4",
-                  backgroundColor: "rgba(11,99,212,0.08)",
+                  backgroundColor: gradient,
+                  fill: true,
+                  tension: 0.4,
+                  borderWidth: 3,
+                  pointBackgroundColor: "#fff",
+                  pointBorderColor: "#0b63d4",
+                  pointRadius: 4,
+                  pointHoverRadius: 6
                 },
               ],
             },
-            options: { responsive: true },
+            options: { 
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: { border: { dash: [4, 4] }, grid: { color: "rgba(0,0,0,0.05)" } }
+              },
+              animation: {
+                y: { duration: 2000, easing: 'easeOutBounce' }
+              }
+            },
           });
         }
 
@@ -77,10 +112,17 @@ document.addEventListener("DOMContentLoaded", function () {
                   backgroundColor: [
                     "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
                   ],
+                  borderWidth: 0,
+                  hoverOffset: 6
                 },
               ],
             },
-            options: { responsive: true },
+            options: { 
+              responsive: true,
+              cutout: '75%',
+              plugins: { legend: { position: 'bottom' } },
+              animation: { animateScale: true, animateRotate: true }
+            },
           });
         }
       },

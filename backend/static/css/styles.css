@@ -882,3 +882,112 @@ body {
 .d-none {
   display: none;
 }
+
+/* ========================================================================= */
+/*                          MOBILE-FIRST UPGRADES                            */
+/* ========================================================================= */
+.bottom-nav {
+  display: none; /* hidden on desktop */
+}
+
+/* Premium Card Enhancements */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 45px 0 rgba(31, 38, 135, 0.1);
+  transform: translateY(-5px);
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+    padding: 10px;
+    margin-bottom: 80px; /* space for bottom nav */
+  }
+  
+  .sidebar {
+    display: none !important; /* hide sidebar completely on mobile */
+  }
+
+  .main.glass-main {
+    padding: 15px;
+    width: 100%;
+  }
+  
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.06);
+    z-index: 90;
+    padding-bottom: env(safe-area-inset-bottom);
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .bottom-nav .nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+    width: 25%;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .bottom-nav .nav-btn.active {
+    color: #0b63d4;
+  }
+
+  .bottom-nav .nav-btn svg {
+    margin-bottom: 3px;
+    transition: transform 0.2s;
+  }
+  
+  .bottom-nav .nav-btn.active svg {
+    transform: translateY(-2px);
+  }
+
+  .bottom-nav .nav-btn span {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Bottom sheet modal for FAB */
+  .fab-modal-overlay {
+    align-items: flex-end; /* Align modal to bottom */
+  }
+
+  .glass-modal {
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 100%;
+    max-width: 100%;
+    animation: slideUpBottomSheet 0.3s ease-out forwards;
+    padding-bottom: max(30px, env(safe-area-inset-bottom));
+  }
+  
+  @keyframes slideUpBottomSheet {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  
+  .fab-container {
+    bottom: 90px; /* above bottom nav */
+    right: 20px;
+  }
+}
