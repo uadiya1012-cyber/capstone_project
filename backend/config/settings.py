@@ -11,13 +11,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    SECRET_KEY = '***REMOVED-LEAKED-SECRET-KEY***'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# SECURITY WARNING: keep the secret key used in production secret!
+#
+# SECRET_KEY нь session cookie болон CSRF token-д гарын үсэг зурдаг.
+# Түлхүүрийг мэддэг хүн дурын хэрэглэгчийн session хуурамчаар үүсгэж
+# чадна — өөрөөр хэлбэл нэвтрэлтийг бүхэлд нь тойрч гарна.
+#
+# Өмнө нь энд hardcode хийсэн түлхүүр fallback болж байсан бөгөөд тэр
+# түлхүүр хоёр public repo-гийн git түүхэнд ил гарсан. Тиймээс дахин
+# ашиглаж болохгүй.
+#
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        # Production-д чимээгүй ажиллахаас чанга унасан нь дээр.
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            'SECRET_KEY тохируулаагүй байна. .env файлд SECRET_KEY-г зааж өгнө үү. '
+            'Шинэ түлхүүр үүсгэх: python -c "from django.core.management.utils '
+            'import get_random_secret_key; print(get_random_secret_key())"'
+        )
+    # Зөвхөн DEBUG=True үеийн нөөц. Санамсаргүй түлхүүр биш тогтмолыг сонгосон
+    # шалтгаан: runserver нь файл засах бүрд дахин ачаалдаг тул санамсаргүй
+    # түлхүүр бол хадгалах болгонд session тасарч, байнга дахин нэвтрэх болно.
+    # Энэ утга production-д хэзээ ч хүрэхгүй — дээрх raise саатуулна.
+    SECRET_KEY = 'django-insecure-dev-only-never-used-when-debug-is-false'
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
 
