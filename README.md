@@ -33,31 +33,43 @@
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Сонголт A — Docker (санал болгож буй)
 
-- Python 3.8+
-- PostgreSQL 12+
-- pip & virtualenv
+Postgres суулгах шаардлагагүй, өөр төслүүдтэй порт мөргөлдөхгүй.
 
-### Setup (5 minutes)
+**Шаардлага:** Docker Desktop
 
 ```bash
-# 1. Navigate to backend directory
-cd capstone-project/backend
+docker compose up --build
+# Нээх: http://localhost:8020/
+# Анх асаахад migration гүйдэг тул 10-20 секунд хүлээнэ.
 
-# 2. Activate virtual environment
+docker compose down        # зогсоох (өгөгдөл хадгалагдана)
+docker compose down -v     # өгөгдлийг нь бас устгах
+```
+
+Postgres нь host дээр порт эзэлдэггүй — backend түүнд Docker-ийн дотоод
+сүлжээгээр `db:5432` гэж ханддаг. Гаднаас (pgAdmin г.м.) үзэх бол
+`docker-compose.yml`-ийн `ports` мөрийг идэвхжүүл.
+
+### Сонголт B — Локал virtualenv
+
+**Шаардлага:** Python 3.10+, PostgreSQL 12+, pip & virtualenv
+
+```bash
+cd backend
 source .venv/bin/activate
 
-# 3. Run setup script (handles migrations + sample data)
-python setup_and_init.py
+cp .env.example .env       # DB болон SECRET_KEY-г тохируулах
+python setup_and_init.py   # migration + жишээ өгөгдөл
+python manage.py runserver 8020
 
-# 4. Start development server
-python manage.py runserver
-
-# 5. Open browser
-# Home: http://localhost:8000/
-# Login: http://localhost:8000/accounts/
+# Нээх: http://localhost:8020/
 ```
+
+⚠️ Django-гийн өгөгдмөл 8000 болон Postgres-ийн 5432 нь энэ машин дээрх
+өөр төслүүдэд эзэмшигдсэн байж болзошгүй. Тиймээс 8020-ыг зааж өгсөн,
+`.env`-ийн `DB_PORT`-ыг ч мөн адил өөрийн Postgres-т тааруулах хэрэгтэй.
 
 ### Sample Users
 

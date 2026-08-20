@@ -1,0 +1,20 @@
+# macOS-ийн .venv нь Linux container дотор ажиллахгүй бөгөөд 100MB+ эзэлдэг
+.venv
+venv
+
+__pycache__
+*.pyc
+*.pyo
+
+# Нууц утгууд image дотор шатаагдах ёсгүй — compose нь environment-ээр дамжуулна
+.env
+
+# Үүсгэгддэг / локал файлууд
+staticfiles/
+media/
+db.sqlite3
+*.log
+
+.git
+.gitignore
+.DS_Store

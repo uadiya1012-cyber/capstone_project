@@ -1,0 +1,72 @@
+# Capstone — локал хөгжүүлэлтийн орчин (Postgres + Django).
+#
+# Ашиглах:
+#   docker compose up --build      → http://localhost:8020
+#   docker compose down            → зогсоох (өгөгдөл хадгалагдана)
+#   docker compose down -v         → өгөгдлийг НЬ БАС устгах
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: capstone_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: capstone
+      POSTGRES_PASSWORD: capstone_dev_password
+      POSTGRES_DB: capstone_db
+    # Host дээр порт ЗАРЛААГҮЙ нь зориуд. backend нь ижил сүлжээнд байгаа тул
+    # "db:5432" гэж нэрээр нь шууд ханддаг — host дээрх нэг ч порт эзлэхгүй.
+    #
+    # pgAdmin / DBeaver зэргээр гаднаас үзэх бол доорхийг идэвхжүүл. 5432 нь
+    # POS-д, 5433 AutoHub-д, 5434 Тариа&Мал-д эзэмшигдсэн тул 5435 сонгов:
+    # ports:
+    #   - "5435:5432"
+    volumes:
+      - capstone_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U capstone -d capstone_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: capstone_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        # Postgres бэлэн болтол хүлээнэ. Үүнгүй бол Django эхний секундэд
+        # холбогдож чадалгүй унана.
+        condition: service_healthy
+    environment:
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: capstone_db
+      DB_USER: capstone
+      DB_PASSWORD: capstone_dev_password
+      # container-ийн НЭР, 127.0.0.1 биш. Docker-ийн дотоод DNS үүнийг
+      # db container-ийн IP рүү хөрвүүлнэ.
+      DB_HOST: db
+      # container ДОТОРХ порт — үргэлж стандарт 5432
+      DB_PORT: 5432
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      # SECRET_KEY зориуд заагаагүй: DEBUG=True тул settings.py нь
+      # тэмдэглэсэн dev түлхүүр рүү шилжинэ. Production-д DEBUG=False
+      # болгоход ImproperlyConfigured шидэж, түлхүүр заахыг шаардана.
+    ports:
+      # Host 8020 → container 8000. Host дээрх 8000 нь POS-д эзэмшигдсэн.
+      - "8020:8000"
+    volumes:
+      # Код засахад container дотор шууд тусгагдана (runserver өөрөө дахин ачаална)
+      - ./backend:/app
+      # Host дээрх macOS .venv нь Linux container дотор ажиллахгүй тул
+      # нэргүй volume-оор халхлав
+      - /app/.venv
+      # Хэрэглэгчийн байршуулсан зураг container дахин үүсэхэд алдагдахгүй
+      - capstone_media:/app/media
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  capstone_pgdata:
+  capstone_media:
