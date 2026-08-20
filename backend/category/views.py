@@ -38,7 +38,11 @@ def category_create(request):
 @login_required
 def category_edit(request, pk):
     category = get_object_or_404(Category, pk=pk)
-    if category.user is not None and category.user != request.user:
+    if category.user is None:
+        if request.user.role not in ['ADMIN', 'MODERATOR']:
+            messages.error(request, 'Глобал категориудыг засварлах эрх танд байхгүй байна.')
+            return redirect('category:category_list')
+    elif category.user != request.user:
         messages.error(request, 'You do not have permission to edit this category.')
         return redirect('category:category_list')
     
@@ -53,10 +57,17 @@ def category_edit(request, pk):
     return render(request, 'category/category_form.html', {'form': form, 'category': category})
 
 @login_required
-@role_required(allowed_roles=['ADMIN', 'MODERATOR'])
 def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
-    # Админ болон Модератор зөвхөн хэрэглэгчийн категориудыг устгах боломжтой
+    if category.user is None:
+        if request.user.role not in ['ADMIN', 'MODERATOR']:
+            messages.error(request, 'Системийн глобал категорийг устгах эрх танд байхгүй.')
+            return redirect('category:category_list')
+    else:
+        if category.user != request.user and request.user.role not in ['ADMIN', 'MODERATOR']:
+            messages.error(request, 'Танд энэ категорийг устгах эрх байхгүй.')
+            return redirect('category:category_list')
+
     if request.method == 'POST':
         category.delete()
         messages.success(request, 'Category deleted successfully.')

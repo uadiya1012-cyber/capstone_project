@@ -9,7 +9,7 @@ from accounts.decorators import role_required
 def budget_list(request):
     budgets = Budget.objects.filter(user=request.user).order_by('-start_date')
     if request.method == 'POST':
-        form = BudgetForm(request.POST)
+        form = BudgetForm(request.POST, user=request.user)
         if form.is_valid():
             budget = form.save(commit=False)
             budget.user = request.user
@@ -17,7 +17,7 @@ def budget_list(request):
             messages.success(request, 'Budget created successfully.')
             return redirect('budget:budget_detail', pk=budget.pk)
     else:
-        form = BudgetForm()
+        form = BudgetForm(user=request.user)
     context = {
         'budgets': budgets,
         'form': form
@@ -33,7 +33,7 @@ def budget_detail(request, pk):
 @login_required
 def budget_create(request):
     if request.method == 'POST':
-        form = BudgetForm(request.POST)
+        form = BudgetForm(request.POST, user=request.user)
         if form.is_valid():
             budget = form.save(commit=False)
             budget.user = request.user
@@ -41,26 +41,28 @@ def budget_create(request):
             messages.success(request, 'Budget created successfully.')
             return redirect('budget:budget_detail', pk=budget.pk)
     else:
-        form = BudgetForm()
+        form = BudgetForm(user=request.user)
     return render(request, 'budget/budget_form.html', {'form': form})
 
 @login_required
 def budget_edit(request, pk):
     budget = get_object_or_404(Budget, pk=pk, user=request.user)
     if request.method == 'POST':
-        form = BudgetForm(request.POST, instance=budget)
+        form = BudgetForm(request.POST, instance=budget, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Budget updated successfully.')
             return redirect('budget:budget_detail', pk=budget.pk)
     else:
-        form = BudgetForm(instance=budget)
+        form = BudgetForm(instance=budget, user=request.user)
     return render(request, 'budget/budget_form.html', {'form': form, 'budget': budget})
 
 @login_required
-@role_required(allowed_roles=['ADMIN', 'MODERATOR'])
 def budget_delete(request, pk):
-    budget = get_object_or_404(Budget, pk=pk, user=request.user)
+    if request.user.role in ['ADMIN', 'MODERATOR']:
+        budget = get_object_or_404(Budget, pk=pk)
+    else:
+        budget = get_object_or_404(Budget, pk=pk, user=request.user)
     if request.method == 'POST':
         budget.delete()
         messages.success(request, 'Budget deleted successfully.')
@@ -73,7 +75,7 @@ def budget_delete(request, pk):
 def allocation_add(request, budget_pk):
     budget = get_object_or_404(Budget, pk=budget_pk, user=request.user)
     if request.method == 'POST':
-        form = BudgetAllocationForm(request.POST)
+        form = BudgetAllocationForm(request.POST, user=request.user)
         if form.is_valid():
             allocation = form.save(commit=False)
             allocation.budget = budget
@@ -81,6 +83,6 @@ def allocation_add(request, budget_pk):
             messages.success(request, 'Allocation added successfully.')
             return redirect('budget:budget_detail', pk=budget.pk)
     else:
-        form = BudgetAllocationForm()
+        form = BudgetAllocationForm(user=request.user)
     return render(request, 'budget/allocation_form.html', {'form': form, 'budget': budget})
 

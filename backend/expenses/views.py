@@ -31,7 +31,7 @@ def expense_detail(request, pk):
 @login_required
 def expense_create(request):
     if request.method == 'POST':
-        form = ExpenseForm(request.POST, request.FILES)
+        form = ExpenseForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             expense = form.save(commit=False)
             expense.user = request.user
@@ -39,20 +39,20 @@ def expense_create(request):
             messages.success(request, 'Expense created successfully.')
             return redirect('expenses:expense_list')
     else:
-        form = ExpenseForm(initial={'date': timezone.localdate()})
+        form = ExpenseForm(initial={'date': timezone.localdate()}, user=request.user)
     return render(request, 'expenses/expense_form.html', {'form': form})
 
 @login_required
 def expense_edit(request, pk):
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     if request.method == 'POST':
-        form = ExpenseForm(request.POST, request.FILES, instance=expense)
+        form = ExpenseForm(request.POST, request.FILES, instance=expense, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Expense updated successfully.')
             return redirect('expenses:expense_detail', pk=expense.pk)
     else:
-        form = ExpenseForm(instance=expense)
+        form = ExpenseForm(instance=expense, user=request.user)
     return render(request, 'expenses/expense_form.html', {'form': form, 'expense': expense})
 
 @login_required
