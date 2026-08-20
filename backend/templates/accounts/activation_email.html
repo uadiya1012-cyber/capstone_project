@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бүртгэл баталгаажуулах</title>
+</head>
+<body style="font-family: 'Outfit', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f7f6; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background: linear-gradient(135deg, #0b63d4 0%, #1e3c72 100%); padding: 40px 20px;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Expense Tracker</h1>
+              <p style="color: #e0e8f5; margin: 5px 0 0 0; font-size: 14px;">Бүртгэл баталгаажуулах имэйл</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="font-size: 18px; color: #1a1a1a; margin-top: 0; font-weight: 600;">Сайн байна уу, {{ user.username }}?</p>
+              <p style="font-size: 15px; color: #555555; line-height: 1.6; margin-bottom: 30px;">
+                Та манай системд амжилттай бүртгүүллээ. Бүртгэлээ баталгаажуулж, өөрийн зардлын хяналтын dashboard руу нэвтрэхийн тулд доорх товчлуур дээр дарж бүртгэлээ идэвхжүүлнэ үү.
+              </p>
+              <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 30px auto;">
+                <tr>
+                  <td align="center" style="border-radius: 8px; background-color: #0b63d4;">
+                    <a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px; background: linear-gradient(135deg, #0b63d4 0%, #1e3c72 100%); box-shadow: 0 4px 15px rgba(11, 99, 212, 0.3);">
+                      Бүртгэл идэвхжүүлэх
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="font-size: 13px; color: #888888; line-height: 1.6; margin-bottom: 20px; text-align: center;">
+                Хэрэв дээрх товчлуур ажиллахгүй бол дараах холбоосыг хуулж хөтөч дээрээ нээнэ үү:<br>
+                <a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}" target="_blank" style="color: #0b63d4; word-break: break-all;">
+                  {{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+                </a>
+              </p>
+              <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;">
+              <p style="font-size: 14px; color: #777777; line-height: 1.6; margin: 0; text-align: center;">
+                Хэрэв та энэхүү бүртгэлийг хийгээгүй бол энэ имэйлийг үл тоомсорлож болно.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="background-color: #f8fafc; padding: 20px; border-top: 1px solid #edf2f7;">
+              <p style="font-size: 12px; color: #a0aec0; margin: 0;">&copy; 2026 Expense Tracker. Бүх эрх хуулиар хамгаалагдсан.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

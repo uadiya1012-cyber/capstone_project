@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="register-container" style="text-align: center; max-width: 600px; margin: 80px auto;">
+  <div style="font-size: 64px; margin-bottom: 20px;">📧</div>
+  <h2 style="font-weight: 700; color: #1a1a1a; margin-bottom: 15px;">Бүртгэл амжилттай үүслээ!</h2>
+  <p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 30px;">
+    Таны бүртгэлийг баталгаажуулах холбоос бүхий имэйлийг бид таны оруулсан имэйл хаяг руу илгээлээ. 
+    Бүртгэлээ идэвхжүүлэхийн тулд имэйлээ шалгаж, баталгаажуулах холбоос дээр дарна уу.
+  </p>
+  <div style="border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px;">
+    <a href="{% url 'login' %}" class="btn" style="background: linear-gradient(135deg, #0b63d4 0%, #1e3c72 100%); color: white; display: inline-block; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 15px rgba(11, 99, 212, 0.2);">
+      Нэвтрэх хуудас руу очих
+    </a>
+  </div>
+</div>
+{% endblock %}
