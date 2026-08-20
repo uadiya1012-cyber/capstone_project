@@ -10,6 +10,7 @@ urlpatterns = [
     path('category/', include('category.urls')),
     path('expenses/', include('expenses.urls')),
     path('budget/', include('budget.urls')),
+    path('api/v1/', include('config.api_urls')),
 ]
 
 # Serve media files during development when DEBUG is True

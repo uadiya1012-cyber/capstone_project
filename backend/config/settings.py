@@ -34,6 +34,7 @@ INSTALLED_APPS = [
 
     # third-party apps
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
 
     # local apps
@@ -77,9 +78,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
+import sys
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DB_ENGINE'),
@@ -90,6 +89,12 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT'),
     }
 }
+
+if os.environ.get('USE_SQLITE') == 'True' or 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 
 
 # Password validation
@@ -150,3 +155,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 1800 #30 минут болоод автоматаар logout хийнэ
 SESSION_SAVE_EVERY_REQUEST = True #хэрэглэгч ямар нэгэн үйлдэл хийх бүрт сешн хугацааг сунгана
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = True  # Set to True for local development
+CORS_ALLOW_CREDENTIALS = True
