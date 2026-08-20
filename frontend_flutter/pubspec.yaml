@@ -1,0 +1,38 @@
+name: frontend_flutter
+description: "A premium Expense Tracker mobile and desktop client application."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP Client
+  http: ^1.2.0
+
+  # Local Key-Value Persistence (for saving Auth Token)
+  shared_preferences: ^2.2.0
+
+  # Premium Charts for Dashboard (Doughnut, Line, Bar)
+  fl_chart: ^0.66.0
+
+  # Modern Fonts (Inter/Outfit)
+  google_fonts: ^6.1.0
+
+  # Formatting (Currency, Dates)
+  intl: ^0.19.0
+
+  # Cupertino Icons
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
