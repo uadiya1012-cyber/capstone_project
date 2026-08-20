@@ -23,8 +23,24 @@ document.addEventListener("DOMContentLoaded", function () {
   function showView(name) {
     views.forEach((v) => v.classList.remove("active"));
     const el = document.getElementById("view-" + name);
-    if (el) el.classList.add("active");
+    if (el) {
+      el.classList.add("active");
+      localStorage.setItem('active_view', name);
+    }
   }
+
+  // Get active view from localStorage or default to dashboard
+  const activeView = localStorage.getItem('active_view') || 'dashboard';
+  showView(activeView);
+  navItems.forEach((item) => {
+    if (item.dataset.view === activeView) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+  });
+  // initialize default active view chart
+  initChartForView(activeView);
 
   // attach click handlers
   navItems.forEach((item) => {
@@ -212,6 +228,82 @@ document.addEventListener("DOMContentLoaded", function () {
           options: { responsive: true },
         });
       },
+
+      reports: () => {
+        if (!chartData) return;
+        
+        // Top 5 Categories Horizontal Bar
+        const el = document.getElementById("chart-top-categories");
+        if (el && chartData.top5_labels && chartData.top5_labels.length > 0) {
+          const ctx = el.getContext("2d");
+          charts.reports_top = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: chartData.top5_labels,
+              datasets: [{
+                label: "Зарцуулалт",
+                data: chartData.top5_values,
+                backgroundColor: [
+                  "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f"
+                ],
+                borderWidth: 0,
+                borderRadius: 6,
+              }],
+            },
+            options: {
+              indexAxis: "y",
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: "rgba(0,0,0,0.05)" } },
+                y: { grid: { display: false } }
+              },
+              animation: { duration: 1200, easing: 'easeOutQuart' }
+            },
+          });
+        }
+        
+        // Yearly Trend Line (reuse monthly_data)
+        const el2 = document.getElementById("chart-yearly-trend");
+        if (el2 && chartData.monthly_data) {
+          const ctx2 = el2.getContext("2d");
+          const gradient = ctx2.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, "rgba(78, 121, 167, 0.3)");
+          gradient.addColorStop(1, "rgba(78, 121, 167, 0.0)");
+          
+          charts.reports_trend = new Chart(ctx2, {
+            type: "line",
+            data: {
+              labels: [
+                "1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар",
+                "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар",
+              ],
+              datasets: [{
+                label: "Зарцуулалт",
+                data: chartData.monthly_data,
+                borderColor: "#4e79a7",
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2.5,
+                pointBackgroundColor: "#fff",
+                pointBorderColor: "#4e79a7",
+                pointRadius: 4,
+                pointHoverRadius: 7,
+              }],
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: { border: { dash: [4, 4] }, grid: { color: "rgba(0,0,0,0.05)" } }
+              },
+              animation: { duration: 1500, easing: 'easeOutQuart' }
+            },
+          });
+        }
+      },
     };
 
     // call the initializer if exists
@@ -222,3 +314,66 @@ document.addEventListener("DOMContentLoaded", function () {
   // initialize default (dashboard)
   initChartForView("dashboard");
 });
+
+// --- Lightbox Functions for Receipts ---
+window.openLightbox = function(imgUrl, caption) {
+  const lightbox = document.getElementById("receipt-lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const lightboxCaption = document.getElementById("lightbox-caption");
+  
+  if (lightbox && lightboxImg) {
+    lightboxImg.src = imgUrl;
+    if (lightboxCaption) {
+      lightboxCaption.textContent = caption || "Баримтын зураг";
+    }
+    lightbox.classList.add("active");
+  }
+};
+
+window.closeLightbox = function() {
+  const lightbox = document.getElementById("receipt-lightbox");
+  if (lightbox) {
+    lightbox.classList.remove("active");
+  }
+};
+
+window.selectCommonExpense = function(inputEl) {
+  const val = inputEl.value;
+  const datalist = document.getElementById("common-expenses-list");
+  if (!datalist) return;
+  
+  let matchedOption = null;
+  for (let i = 0; i < datalist.options.length; i++) {
+    if (datalist.options[i].value === val) {
+      matchedOption = datalist.options[i];
+      break;
+    }
+  }
+  
+  if (matchedOption) {
+    const categoryId = matchedOption.getAttribute("data-category-id");
+    
+    // Autofill description
+    const descField = document.getElementById("id_exp-description");
+    if (descField) {
+      descField.value = val;
+    }
+    
+    // Autofill category
+    const catField = document.getElementById("id_exp-category");
+    if (catField && categoryId) {
+      catField.value = categoryId;
+    }
+    
+    // Focus on amount field
+    const amtField = document.getElementById("id_exp-amount");
+    if (amtField) {
+      amtField.focus();
+    }
+    
+    // Clear search box
+    inputEl.value = "";
+  }
+};
+
+

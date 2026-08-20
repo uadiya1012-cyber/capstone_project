@@ -13,7 +13,18 @@
   <body>
     {% include 'includes/navbar.html' %}
 
-    <main>{% block content %}{% endblock %}</main>
+    <main>
+      {% if messages %}
+        <div class="messages-container" style="max-width: 1200px; margin: 20px auto; padding: 0 20px;">
+          {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
 
     {% include 'includes/footer.html' %}
 
