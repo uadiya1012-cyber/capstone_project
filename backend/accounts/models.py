@@ -9,6 +9,11 @@ class CustomUser(AbstractUser):
     )
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='USER')
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    currency = models.CharField(max_length=5, default='₮')
+    daily_limit = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    monthly_savings_goal = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
 
     def __str__(self):
         # Hide role in string representation to avoid showing it in logs/UI
