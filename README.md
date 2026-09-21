@@ -33,6 +33,8 @@
 
 ## 🚀 Quick Start
 
+> Production (Render + Neon, үнэгүй) дээр байрлуулах заавар: [DEPLOY.md](DEPLOY.md)
+
 ### Сонголт A — Docker (санал болгож буй)
 
 Postgres суулгах шаардлагагүй, өөр төслүүдтэй порт мөргөлдөхгүй.

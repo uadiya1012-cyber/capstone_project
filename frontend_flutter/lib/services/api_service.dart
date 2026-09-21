@@ -8,9 +8,14 @@ import '../models/budget.dart';
 import '../models/dashboard_stats.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android emulator to connect to localhost on host machine
-  // Use 127.0.0.1 for iOS emulator or desktop builds (macOS, Windows)
-  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  // Backend-ийн хаягийг build үед өгнө, кодонд хатуу бичихгүй:
+  //   flutter run   --dart-define=API_BASE_URL=http://10.0.2.2:8020/api/v1   (Android emulator)
+  //   flutter build --dart-define=API_BASE_URL=https://<app>.onrender.com/api/v1  (production)
+  // Өгөөгүй бол локал өгөгдмөл: iOS simulator / desktop → 127.0.0.1.
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8000/api/v1',
+  );
   
   static String? _token;
 

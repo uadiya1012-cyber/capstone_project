@@ -1,4 +1,5 @@
-# Локал хөгжүүлэлтэд зориулсан backend image.
+# Backend image — локал (docker-compose runserver-ээр дарж ажиллуулна) ба production
+# (Render г.м. PaaS: CMD нь start.sh → migrate, collectstatic, gunicorn).
 # Python-ы хувилбарыг .venv-тэй ижил байлгав (3.14) — ингэснээр container
 # дотор ажиллах болон host дээр шууд ажиллуулах хоёр ижил зан төлөвтэй болно.
 FROM python:3.14-slim
@@ -22,4 +23,4 @@ COPY . .
 # docker-compose.yml шийднэ.
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "start.sh"]

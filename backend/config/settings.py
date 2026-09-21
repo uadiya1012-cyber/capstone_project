@@ -111,6 +111,30 @@ DATABASES = {
     }
 }
 
+# PaaS (Render, Railway, Koyeb) болон Neon зэрэг үүлэн Postgres нь холболтоо нэг
+# DATABASE_URL мөрөөр өгдөг. Байвал дээрх DB_* хувьсагчдыг дарж бичнэ; байхгүй бол
+# (локал, docker-compose) салангид хувьсагчид хэвээр ажиллана.
+_database_url = os.environ.get('DATABASE_URL')
+if _database_url:
+    from urllib.parse import parse_qs, unquote, urlparse
+
+    _u = urlparse(_database_url)
+    _sslmode = (
+        parse_qs(_u.query).get('sslmode', [None])[0]
+        or os.environ.get('DB_SSLMODE', 'require')
+    )
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': _u.path.lstrip('/'),
+        'USER': unquote(_u.username or ''),
+        'PASSWORD': unquote(_u.password or ''),
+        'HOST': _u.hostname or '',
+        'PORT': str(_u.port or 5432),
+        # Хүсэлт бүрд шинээр холбогдохгүй, 60 секунд дахин ашиглана (үүлэн DB-д чухал)
+        'CONN_MAX_AGE': 60,
+        'OPTIONS': {'sslmode': _sslmode},
+    }
+
 if os.environ.get('USE_SQLITE') == 'True' or 'test' in sys.argv:
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -155,6 +179,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise: статик файлуудыг gzip/brotli шахаж кэштэй үйлчилнэ. Manifest-гүй хувилбар —
+# template-д дурдсан файл олдохгүй байсан ч collectstatic унахгүй (deploy аюулгүй).
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files (user-uploaded content)
@@ -197,6 +228,26 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True  # Set to True for local development
+# CORS: production-д зөвхөн CORS_ALLOWED_ORIGINS-д таслалаар жагсаасан origin-ууд
+# (жишээ: https://app.example.com,https://example.com). DEBUG үед, жагсаалт өгөөгүй бол
+# бүгдийг нээнэ — локал Flutter/вэб хөгжүүлэлтэд.
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o.strip()
+]
+CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
+
+# Admin болон формуудын CSRF нь https origin-ийг ил зөвшөөрөхийг шаарддаг
+# (жишээ: https://capstone-expense-tracker.onrender.com).
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
+
+# Production (DEBUG=False): PaaS нь HTTPS-ийг өөрийн proxy дээр тайлж, Django руу
+# http-ээр дамжуулдаг тул X-Forwarded-Proto толгойд итгэнэ; cookie-г зөвхөн https-ээр.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '3600'))

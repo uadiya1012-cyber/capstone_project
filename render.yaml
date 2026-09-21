@@ -1,0 +1,26 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Render dashboard → New → Blueprint → энэ репог сонгоход доорх үйлчилгээг үүсгэнэ.
+# DATABASE_URL-ийг Neon-оос гараар оруулна (sync: false). SECRET_KEY-г Render өөрөө үүсгэнэ.
+services:
+  - type: web
+    name: capstone-expense-tracker
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /admin/login/
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: capstone-expense-tracker.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://capstone-expense-tracker.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://capstone-expense-tracker.onrender.com
+      - key: DATABASE_URL
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: "2"
