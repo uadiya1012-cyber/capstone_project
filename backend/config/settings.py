@@ -143,6 +143,28 @@ if _database_url:
         'OPTIONS': {'sslmode': _sslmode},
     }
 
+    # Бүтэн бус URL-ийг ДУУГҮЙ хүлээж авбал алдаа хожим, танихад бэрх хэлбэрээр
+    # гардаг: Django "settings.DATABASES is improperly configured. Please supply
+    # the NAME value" гэсэн 40 мөр traceback өгөх бөгөөд тэр нь `DATABASE_URL`-ийг
+    # хуулахдаа сүүлийг тасалсан гэдгийг хэлж чадахгүй. Тиймээс энд шалгаж,
+    # яг юу дутууг нэрлэнэ. Нууц үгийг хэвлэхгүй.
+    _missing = [k for k in ('NAME', 'HOST', 'USER') if not DATABASES['default'][k]]
+    if _missing:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            'DATABASE_URL-ийг задлахад {} дутуу гарлаа. Хүлээж байгаа хэлбэр:\n'
+            '  postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require\n'
+            'Холболтын мөрийг бүтнээр хуулсан эсэхээ шалгана уу — өгөгдлийн сангийн '
+            'нэр (жишээ: /neondb) болон ?sslmode=require сүүл байх ёстой.\n'
+            'Одоогийн задлалт: USER={!r}, HOST={!r}, NAME={!r} (нууц үг хэвлэгдэхгүй).'
+            .format(
+                ', '.join(_missing),
+                DATABASES['default']['USER'],
+                DATABASES['default']['HOST'],
+                DATABASES['default']['NAME'],
+            )
+        )
+
 if os.environ.get('USE_SQLITE') == 'True' or 'test' in sys.argv:
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
