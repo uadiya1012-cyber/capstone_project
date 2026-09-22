@@ -7,7 +7,11 @@ Backend (Django) нь **Render**-ийн үнэгүй web service дээр Docker
 
 ## 1. Neon — үнэгүй Postgres
 
-1. https://neon.tech → GitHub-аар бүртгүүл → **New project** (нэр: `capstone`, бүс: Frankfurt эсвэл Singapore).
+1. https://neon.tech → GitHub-аар бүртгүүл → **New project** (нэр: `capstone`,
+   бүс: **AWS Asia Pacific 1 (Singapore)**). Бүс нь `render.yaml`-ийн `region: singapore`-тэй
+   ижил байх ЗААВАЛ шаардлагатай — өөр тив дээр байвал query бүр далай гаталж хоцрогдоно.
+   Postgres хувилбар 18, database нэр `neondb` (анхдагч) хэвээр. Бусад үйлчилгээ (Object
+   storage, Functions, AI gateway, Neon Auth) хэрэггүй — унтраасан хэвээр үлдээ.
 2. Dashboard → **Connect** → *Pooled connection*-г сонгоод холболтын мөрийг хуул:
    `postgresql://<user>:<password>@<ep-xxx>.neon.tech/neondb?sslmode=require`
    Энэ мөр бол `DATABASE_URL`. Хэнд ч бүү харуул, git-д бүү оруул.
@@ -18,9 +22,12 @@ Backend (Django) нь **Render**-ийн үнэгүй web service дээр Docker
 2. Render `render.yaml`-ийг уншиж **capstone-expense-tracker** үйлчилгээг санал болгоно.
    `DATABASE_URL` асуухад Neon-ийн мөрийг оруул. `SECRET_KEY`-г Render өөрөө санамсаргүй үүсгэнэ.
 3. **Apply** → Docker build 3–5 мин → `backend/start.sh` ажиллана: `migrate` → `collectstatic` → `gunicorn`.
+   Render `/healthz/` замаар эрүүл мэндийг шалгана (өгөгдлийн санд хандахгүй хөнгөн endpoint —
+   Neon унтсан байсан ч deploy унахгүй).
 4. https://capstone-expense-tracker.onrender.com/admin/login/ нээгдэж байвал амжилттай.
-   Үйлчилгээний нэр өөр байвал (`xxx.onrender.com`) **Environment** хэсэгт `ALLOWED_HOSTS`,
-   `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS` гурвыг шинэ домэйнд тааруул.
+   Үйлчилгээний нэр эзэлэгдсэн байж Render өөр домэйн оноовол (`xxx.onrender.com`) **гараар засах
+   шаардлагагүй** — Django нь Render-ийн `RENDER_EXTERNAL_HOSTNAME` хувьсагчийг уншиж
+   `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS` гуравт өөрөө нэмнэ.
 5. Админ хэрэглэгч: Render → **Shell** → `python manage.py createsuperuser`
    (эсвэл `python setup_and_init.py` — жишээ хэрэглэгч, өгөгдөлтэй).
 
@@ -44,7 +51,7 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8020/api/v1
 |---|---|---|
 | `DEBUG` | `False` | Production-д заавал |
 | `SECRET_KEY` | Render үүсгэнэ | 50+ тэмдэгт; хуучин ил гарсан түлхүүрийг хэзээ ч бүү ашигла |
-| `ALLOWED_HOSTS` | `capstone-expense-tracker.onrender.com` | Таслалаар олон домэйн |
+| `ALLOWED_HOSTS` | `capstone-expense-tracker.onrender.com` | Таслалаар олон домэйн. Render-ийн `RENDER_EXTERNAL_HOSTNAME` автоматаар нэмэгдэнэ |
 | `CSRF_TRUSTED_ORIGINS` | `https://capstone-expense-tracker.onrender.com` | Admin, формуудад |
 | `CORS_ALLOWED_ORIGINS` | `https://...` | Вэб клиент байвал; Flutter native апп CORS шаарддаггүй |
 | `DATABASE_URL` | Neon-ийн мөр | `?sslmode=require` байвал хэрэглэнэ, үгүй бол `DB_SSLMODE` (анхдагч `require`) |
@@ -55,8 +62,11 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8020/api/v1
 
 - **Унтах:** үнэгүй Render 15 минут хүсэлтгүй бол унтдаг, эхний хүсэлт 30–50 секунд. Neon-ийн
   compute ч 5 минутын дараа унтдаг (сэрэхэд ~1 сек).
-- **Media (баримтын зураг):** Render-ийн үнэгүй дискэнд түр хадгалагдаж, deploy бүрд устна.
-  Хэрэгтэй бол Cloudinary/S3 руу шилжүүлнэ (ирээдүйн ажил).
+- **Media (аватар, баримтын зураг):** `/media/...` замыг production-д `config/views.py`-ийн
+  `protected_media` view үйлчилнэ — нэвтрэлт шаардаж, `may_view()` дотор эзэмшлийг шалгана
+  (баримт бол хувийн санхүүгийн бичиг баримт тул зөвхөн эзэн + админ харна). Гэхдээ **файлууд
+  Render-ийн үнэгүй дискэнд түр хадгалагдаж, deploy бүрд устдаг** — тогтвортой хадгалалт
+  хэрэгтэй бол Cloudinary/S3 руу шилжүүлнэ (ирээдүйн ажил).
 - **Локал production симуляци** (бодит нууц үггүй):
   `DEBUG=False SECRET_KEY=<түр> DATABASE_URL=<Neon> python manage.py check --deploy`
 - Локал хөгжүүлэлт өөрчлөгдөөгүй: `docker compose up` (runserver, DEBUG=True, порт 8020).

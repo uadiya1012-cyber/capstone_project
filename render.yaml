@@ -6,9 +6,14 @@ services:
     name: capstone-expense-tracker
     runtime: docker
     plan: free
+    # Neon-ийн өгөгдлийн сантай ИЖИЛ бүс. Заагаагүй бол Render анхдагчаар Oregon
+    # (АНУ)-г сонгодог бөгөөд DB Сингапурт байвал хүсэлт бүр Номхон далайг
+    # гаталж ~180 мс нэмнэ. Django хуудас нэг ачаалахад хэдэн арван query
+    # явуулдаг тул энэ нь секундээр хэмжигдэх хоцролт болж хувирдаг.
+    region: singapore
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    healthCheckPath: /admin/login/
+    healthCheckPath: /healthz/
     envVars:
       - key: DEBUG
         value: "False"

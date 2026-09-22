@@ -42,6 +42,14 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
 
+# Render нь үйлчилгээний бодит домэйныг RENDER_EXTERNAL_HOSTNAME хувьсагчаар
+# өөрөө өгдөг. render.yaml-д бичсэн нэр аль хэдийн эзэлэгдсэн байвал Render
+# өөр домэйн (жишээ: capstone-expense-tracker-a1b2.onrender.com) оноодог —
+# тэр үед ALLOWED_HOSTS/CSRF/CORS-ыг гараар засахгүйгээр өөрөө таарна.
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 
 # Application definition
 
@@ -243,6 +251,14 @@ CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
 ]
 
+# Дээрх ALLOWED_HOSTS-тэй ижил шалтгаанаар Render-ийн домэйныг origin болгож нэмнэ.
+if RENDER_EXTERNAL_HOSTNAME:
+    _render_origin = f'https://{RENDER_EXTERNAL_HOSTNAME}'
+    if _render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_render_origin)
+    if _render_origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_render_origin)
+
 # Production (DEBUG=False): PaaS нь HTTPS-ийг өөрийн proxy дээр тайлж, Django руу
 # http-ээр дамжуулдаг тул X-Forwarded-Proto толгойд итгэнэ; cookie-г зөвхөн https-ээр.
 if not DEBUG:
@@ -251,3 +267,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '3600'))
+    # Health check нь платформын дотоод prober-оос http-ээр, X-Forwarded-Proto
+    # толгойгүй ирж болдог. Redirect-ээс чөлөөлөөгүй бол 301 хариу авч,
+    # Render үйлчилгээг "unhealthy" гэж тооцох эрсдэлтэй. Зам нь урд налуугүй.
+    SECURE_REDIRECT_EXEMPT = [r'^healthz/$']
