@@ -224,6 +224,13 @@ MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+# Нэвтрэх хуудас нь accounts/urls.py-д `path('', ...)` дээр байдаг тул бодит зам нь
+# `/accounts/`. Django-ийн анхдагч LOGIN_URL нь `/accounts/login/` — тэр зам энэ аппад
+# БАЙХГҮЙ. Заагаагүй бол `@login_required` бүх view (26 байршил) нэвтрээгүй
+# хэрэглэгчийг 404 руу шиддэг: session 30 минутын дараа дуусахад хэрэглэгч нэвтрэх
+# формын оронд "Not Found" хардаг. Замын оронд URL-ийн НЭРийг өгсөн нь зам хожим
+# өөрчлөгдвөл өөрөө дагаж зөв хэвээр байхын тулд.
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'user_dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 

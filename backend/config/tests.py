@@ -14,6 +14,7 @@ import tempfile
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import path
 
@@ -25,6 +26,9 @@ _MEDIA = tempfile.mkdtemp(prefix='test-media-')
 
 urlpatterns = [
     path('media/<path:path>', protected_media, name='protected_media'),
+    # `settings.LOGIN_URL` нь зам биш URL-ийн НЭР ('login') тул `login_required`-ийн
+    # redirect шийдэгдэхийн тулд энэ urlconf-д ижил нэртэй зам байх шаардлагатай.
+    path('accounts/', lambda r: HttpResponse('login form'), name='login'),
 ]
 
 RECEIPT = 'receipts/2026/09/22/bill.jpg'
@@ -66,7 +70,7 @@ class ProtectedMediaTests(TestCase):
         """Нэвтрээгүй зочин файл рүү хүрэх ч үгүй — login руу шилжинэ."""
         r = self.client.get(f'/media/{RECEIPT}')
         self.assertEqual(r.status_code, 302)
-        self.assertIn('/accounts/login/', r.headers['Location'])
+        self.assertIn('/accounts/', r.headers['Location'])
 
     # --- баримт: эзэмшил ---
 
@@ -109,3 +113,23 @@ class ProtectedMediaTests(TestCase):
         """`receipts/` -ээр эхэлсэн ч гараад явах оролдлого эзэмшилд таарахгүй."""
         self.assertFalse(may_view(self.other, 'receipts/../../config/settings.py'))
         self.assertFalse(may_view(self.other, '../config/settings.py'))
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class LoginRedirectTests(TestCase):
+    """
+    Нэвтрээгүй хэрэглэгчийг хамгаалалттай хуудаснаас нэвтрэх формд хүргэх.
+
+    Энд ЗОРИУД өөрийн urlconf хэрэглэхгүй — бодит `config.urls`-аар бүх гинжийг
+    (login_required → settings.LOGIN_URL → accounts/urls.py) шалгах нь чухал.
+    LOGIN_URL заагаагүй бол Django `/accounts/login/` руу шиднэ, тэр зам нь энэ
+    аппад байхгүй тул хэрэглэгч 404 хардаг.
+    """
+
+    def test_zochin_nevtrekh_formd_khurne(self):
+        from django.urls import reverse
+
+        r = self.client.get('/accounts/dashboard/', follow=True)
+        self.assertEqual(r.status_code, 200, 'нэвтрэх хуудас нээгдэх ёстой (404 биш)')
+        final_url = r.redirect_chain[-1][0]
+        self.assertIn(reverse('login'), final_url)
