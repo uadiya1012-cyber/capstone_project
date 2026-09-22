@@ -124,46 +124,12 @@ DATABASES = {
 # (локал, docker-compose) салангид хувьсагчид хэвээр ажиллана.
 _database_url = os.environ.get('DATABASE_URL')
 if _database_url:
-    from urllib.parse import parse_qs, unquote, urlparse
-
-    _u = urlparse(_database_url)
-    _sslmode = (
-        parse_qs(_u.query).get('sslmode', [None])[0]
-        or os.environ.get('DB_SSLMODE', 'require')
+    # Задлалт + шалгалт config/db_url.py-д (тестлэгдэх боломжтой байлгахын тулд).
+    # Neon-ийн өгдөг `channel_binding=require` зэрэг libpq параметрүүдийг ч дамжуулна.
+    from config.db_url import parse_database_url
+    DATABASES['default'] = parse_database_url(
+        _database_url, default_sslmode=os.environ.get('DB_SSLMODE', 'require')
     )
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': _u.path.lstrip('/'),
-        'USER': unquote(_u.username or ''),
-        'PASSWORD': unquote(_u.password or ''),
-        'HOST': _u.hostname or '',
-        'PORT': str(_u.port or 5432),
-        # Хүсэлт бүрд шинээр холбогдохгүй, 60 секунд дахин ашиглана (үүлэн DB-д чухал)
-        'CONN_MAX_AGE': 60,
-        'OPTIONS': {'sslmode': _sslmode},
-    }
-
-    # Бүтэн бус URL-ийг ДУУГҮЙ хүлээж авбал алдаа хожим, танихад бэрх хэлбэрээр
-    # гардаг: Django "settings.DATABASES is improperly configured. Please supply
-    # the NAME value" гэсэн 40 мөр traceback өгөх бөгөөд тэр нь `DATABASE_URL`-ийг
-    # хуулахдаа сүүлийг тасалсан гэдгийг хэлж чадахгүй. Тиймээс энд шалгаж,
-    # яг юу дутууг нэрлэнэ. Нууц үгийг хэвлэхгүй.
-    _missing = [k for k in ('NAME', 'HOST', 'USER') if not DATABASES['default'][k]]
-    if _missing:
-        from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured(
-            'DATABASE_URL-ийг задлахад {} дутуу гарлаа. Хүлээж байгаа хэлбэр:\n'
-            '  postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require\n'
-            'Холболтын мөрийг бүтнээр хуулсан эсэхээ шалгана уу — өгөгдлийн сангийн '
-            'нэр (жишээ: /neondb) болон ?sslmode=require сүүл байх ёстой.\n'
-            'Одоогийн задлалт: USER={!r}, HOST={!r}, NAME={!r} (нууц үг хэвлэгдэхгүй).'
-            .format(
-                ', '.join(_missing),
-                DATABASES['default']['USER'],
-                DATABASES['default']['HOST'],
-                DATABASES['default']['NAME'],
-            )
-        )
 
 if os.environ.get('USE_SQLITE') == 'True' or 'test' in sys.argv:
     DATABASES['default'] = {

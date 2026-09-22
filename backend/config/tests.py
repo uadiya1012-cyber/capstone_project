@@ -14,10 +14,12 @@ import tempfile
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import path
 
+from config.db_url import parse_database_url
 from config.views import may_view, protected_media
 from expenses.models import Expense
 
@@ -133,3 +135,60 @@ class LoginRedirectTests(TestCase):
         self.assertEqual(r.status_code, 200, 'нэвтрэх хуудас нээгдэх ёстой (404 биш)')
         final_url = r.redirect_chain[-1][0]
         self.assertIn(reverse('login'), final_url)
+
+
+class DatabaseUrlTests(SimpleTestCase):
+    """
+    config/db_url.py — DATABASE_URL задлагч. Өгөгдлийн сан хэрэггүй (SimpleTestCase).
+
+    Эдгээр тохиолдлын хоёр нь production дээр бодитоор тохиолдсон: тасарсан URL
+    (Render-ийн эхний deploy унасан) ба Neon-ийн channel_binding-ийг хаяж байсан.
+    """
+
+    NEON = ('postgresql://neondb_owner:npg_s3cret@ep-brook-123-pooler.c-3.ap-southeast-1'
+            '.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
+
+    def test_neon_url_buren_zadarna(self):
+        d = parse_database_url(self.NEON)
+        self.assertEqual(d['ENGINE'], 'django.db.backends.postgresql')
+        self.assertEqual(d['NAME'], 'neondb')
+        self.assertEqual(d['USER'], 'neondb_owner')
+        self.assertEqual(d['PASSWORD'], 'npg_s3cret')
+        self.assertEqual(d['HOST'], 'ep-brook-123-pooler.c-3.ap-southeast-1.aws.neon.tech')
+        self.assertEqual(d['PORT'], '5432')
+        self.assertEqual(d['CONN_MAX_AGE'], 60)
+
+    def test_channel_binding_damjuulna(self):
+        """Neon-ийн MITM хамгаалалт хаягдахгүй, libpq руу хүрнэ."""
+        d = parse_database_url(self.NEON)
+        self.assertEqual(d['OPTIONS'], {'sslmode': 'require', 'channel_binding': 'require'})
+
+    def test_tanikhgui_query_damjuulakhgui(self):
+        """Allowlist-д байхгүй параметр libpq руу очвол холболт унана — шүүнэ."""
+        d = parse_database_url(self.NEON + '&foo=bar&application_name=x')
+        self.assertNotIn('foo', d['OPTIONS'])
+        self.assertNotIn('application_name', d['OPTIONS'])
+
+    def test_query_gui_bol_default_sslmode(self):
+        d = parse_database_url('postgresql://u:p@h/db', default_sslmode='prefer')
+        self.assertEqual(d['OPTIONS'], {'sslmode': 'prefer'})
+
+    def test_port_bolon_kodlogdson_nuuts_ug(self):
+        d = parse_database_url('postgresql://u:p%40ss%2Fw@h:6543/db')
+        self.assertEqual(d['PORT'], '6543')
+        self.assertEqual(d['PASSWORD'], 'p@ss/w')
+
+    def test_tasarsan_url_changa_unana(self):
+        """Production дээр бодитоор тохиолдсон: /neondb?... сүүл хуулагдаагүй."""
+        with self.assertRaises(ImproperlyConfigured) as cm:
+            parse_database_url('postgresql://neondb_owner:npg_s3cret@ep-x-pooler.neon.tech')
+        msg = str(cm.exception)
+        self.assertIn('NAME', msg)
+        self.assertIn('/neondb', msg)
+        self.assertNotIn('npg_s3cret', msg, 'нууц үг алдааны мессежид гарч болохгүй')
+
+    def test_url_bish_text_changa_unana(self):
+        with self.assertRaises(ImproperlyConfigured) as cm:
+            parse_database_url('1234')
+        self.assertIn('HOST', str(cm.exception))
+        self.assertIn('USER', str(cm.exception))
