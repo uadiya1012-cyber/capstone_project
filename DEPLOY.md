@@ -24,12 +24,30 @@ Backend (Django) нь **Render**-ийн үнэгүй web service дээр Docker
 3. **Apply** → Docker build 3–5 мин → `backend/start.sh` ажиллана: `migrate` → `collectstatic` → `gunicorn`.
    Render `/healthz/` замаар эрүүл мэндийг шалгана (өгөгдлийн санд хандахгүй хөнгөн endpoint —
    Neon унтсан байсан ч deploy унахгүй).
-4. https://capstone-expense-tracker.onrender.com/admin/login/ нээгдэж байвал амжилттай.
+4. `https://<үйлчилгээний нэр>.onrender.com/healthz/` нь `ok` буцааж байвал амжилттай.
+   Одоогийн live: **https://capstone-expense-tracker-c9g1.onrender.com** (нэр эзэлэгдсэн тул
+   Render `-c9g1` дагавар нэмсэн).
    Үйлчилгээний нэр эзэлэгдсэн байж Render өөр домэйн оноовол (`xxx.onrender.com`) **гараар засах
    шаардлагагүй** — Django нь Render-ийн `RENDER_EXTERNAL_HOSTNAME` хувьсагчийг уншиж
    `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS` гуравт өөрөө нэмнэ.
-5. Админ хэрэглэгч: Render → **Shell** → `python manage.py createsuperuser`
-   (эсвэл `python setup_and_init.py` — жишээ хэрэглэгч, өгөгдөлтэй).
+5. Админ хэрэглэгч — **үнэгүй багцад Render Shell байхгүй** (Starter-ээс дээш), харин Neon
+   интернетэд нээлттэй тул локал машинаас production DB дээр шууд ажиллуулна:
+   ```bash
+   cd backend
+   ./scripts/manage_prod.sh createsuperuser
+   ```
+   Скрипт `DATABASE_URL`-ийг асууна (Render → Environment → `DATABASE_URL`-ээс хуулна; таны
+   нууц үг биш). Оролт нуугдмал, харин буулгасны дараа нууц үгийг далдалж юу орсныг харуулна.
+   Дараа нь аппын өөрийн эрхийн системд админ болгоно — `createsuperuser` нь `is_staff`-ийг
+   тавьдаг ч `CustomUser.role`-ийг `USER` үлдээдэг, аппын `role_required` decorator
+   зөвхөн `role`-ийг шалгадаг:
+   ```bash
+   ./scripts/manage_prod.sh shell -c "
+   from accounts.models import CustomUser
+   u = CustomUser.objects.get(username='НЭР'); u.role = 'ADMIN'; u.save()"
+   ```
+   ⚠️ `setup_and_init.py`-г **live дээр бүү ажиллуул**: `bob_admin` / `Test1234!` (ADMIN) зэрэг
+   нууц үг нь public репод ил бичигдсэн хэрэглэгчдийг үүсгэдэг. Зөвхөн локал/demo-д.
 
 ## 3. Flutter клиент
 
@@ -37,7 +55,7 @@ Backend-ийн хаягийг build үед өгнө (`lib/services/api_service.d
 
 ```bash
 # Production
-flutter build apk --dart-define=API_BASE_URL=https://capstone-expense-tracker.onrender.com/api/v1
+flutter build apk --dart-define=API_BASE_URL=https://capstone-expense-tracker-c9g1.onrender.com/api/v1
 
 # Android emulator дээр локал backend (docker compose → host 8020)
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8020/api/v1
