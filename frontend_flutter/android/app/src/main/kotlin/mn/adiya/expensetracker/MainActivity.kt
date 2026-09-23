@@ -1,4 +1,4 @@
-package com.example.frontend_flutter
+package mn.adiya.expensetracker
 
 import io.flutter.embedding.android.FlutterActivity
 
