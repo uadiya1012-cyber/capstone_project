@@ -33,6 +33,10 @@ def describe(error: Exception) -> str:
         'AccessDenied': 'Түлхүүр энэ bucket-д унших/бичих эрхгүй — bucket-д зориулсан Read & Write түлхүүр үүсгэ',
         'NoSuchBucket': 'Ийм нэртэй bucket алга (MEDIA_S3_BUCKET) — нэрийг яг хуул',
         'InvalidBucketName': 'Bucket-ийн нэр буруу хэлбэртэй (MEDIA_S3_BUCKET)',
+        # HEAD хүсэлт (exists) хариугаа тайлбаргүй буцаадаг тул код нь зөвхөн HTTP статус болдог.
+        '403': 'Хандалт татгалзагдав (403). Элбэг шалтгаан: нууц түлхүүр харагдахгүй горимд дутуу/буруу буулгагдсан; '
+               'бусад: token энэ bucket-д эрхгүй, endpoint буруу',
+        '401': 'Нэвтрэлт татгалзагдав (401): access key эсвэл нууц түлхүүр буруу',
     }
     if code in hints:
         return f'{hints[code]} [{code}]'
@@ -54,6 +58,20 @@ def round_trip(storage) -> list[Step]:
         return [Step('storage', False, 'MEDIA_S3_BUCKET өгөгдөөгүй — локал диск ашиглаж байна, bucket шалгах зүйл алга')]
 
     steps = [Step('storage', True, type(storage).__name__)]
+
+    # Бичихээс өмнө bucket-ийн жагсаалтыг нэг удаа асууна: энэ хүсэлт хариугаа
+    # тайлбартай буцаадаг тул түлхүүр буруу, гарын үсэг зөрсөн, эрхгүй гэдгийг
+    # ялгаж хэлнэ (HEAD бол зөвхөн 403 гэж хэлээд дуугүй байдаг).
+    bucket = getattr(storage, 'bucket_name', None)
+    connection = getattr(storage, 'connection', None) if bucket else None
+    if connection is not None:
+        try:
+            connection.meta.client.list_objects_v2(Bucket=bucket, MaxKeys=1)
+            steps.append(Step('холболт', True, f'bucket «{bucket}» руу нэвтэрлээ'))
+        except Exception as error:  # noqa: BLE001
+            steps.append(Step('холболт', False, describe(error)))
+            return steps
+
     name = f'healthcheck/{datetime.now(timezone.utc):%Y%m%dT%H%M%S}.txt'
     payload = b'capstone media bucket check'
 

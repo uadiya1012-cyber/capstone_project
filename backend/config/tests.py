@@ -239,6 +239,24 @@ class MediaCheckTests(SimpleTestCase):
         self.assertIn('эрхгүй', describe(client_error('AccessDenied')))
         self.assertIn('MEDIA_S3_ENDPOINT_URL', describe(EndpointConnectionError(endpoint_url='https://x.invalid')))
         self.assertIn('ValueError', describe(ValueError('юу ч биш')))
+        # HEAD-ийн хариу тайлбаргүй тул код нь '403' л байдаг — буулгалтын алдаа руу чиглүүлнэ.
+        self.assertIn('нууц түлхүүр', describe(client_error('403')))
+
+    def test_kholbolt_alkham_jinkhene_kodyg_kharuulna(self):
+        """S3-төст storage-д бичихээс өмнө жагсаалт асууж, гарын үсгийн алдааг нэрээр нь хэлнэ."""
+        from unittest.mock import MagicMock
+        from botocore.exceptions import ClientError
+
+        storage = MagicMock(spec=['bucket_name', 'connection', 'save'])
+        storage.bucket_name = 'capstone-media'
+        storage.connection.meta.client.list_objects_v2.side_effect = ClientError(
+            {'Error': {'Code': 'SignatureDoesNotMatch', 'Message': 'x'}}, 'ListObjectsV2',
+        )
+        steps = round_trip(storage)
+        self.assertEqual([s.name for s in steps], ['storage', 'холболт'])
+        self.assertFalse(steps[1].ok)
+        self.assertIn('MEDIA_S3_SECRET_KEY', steps[1].detail)
+        storage.save.assert_not_called()
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
