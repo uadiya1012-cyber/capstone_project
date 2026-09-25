@@ -50,8 +50,23 @@ def main() -> int:
         region = ask('Бүс (R2 → auto; B2 → us-west-004 г.м.; хоосон = алгасах)')
         if region:
             os.environ['MEDIA_S3_REGION'] = region
-        os.environ['MEDIA_S3_ACCESS_KEY'] = ask('Access key ID')
-        os.environ['MEDIA_S3_SECRET_KEY'] = ask('Secret access key', secret=True)
+        access = ask('Access key ID')
+        secret = ask('Secret access key', secret=True)
+        os.environ['MEDIA_S3_ACCESS_KEY'] = access
+        os.environ['MEDIA_S3_SECRET_KEY'] = secret
+        # Харагдахгүй горимд юу орсныг мэдэх цорын ганц арга — урт ба төгсгөлийг харуулж тулгуулна.
+        print(f'  (access key: {len(access)} тэмдэгт, төгсгөл …{access[-4:]}; secret: {len(secret)} тэмдэгт, төгсгөл …{secret[-4:]})')
+        if secret.startswith('cfat_'):
+            print('  ✗ Энэ бол Cloudflare-ийн «Token value» — S3-д хэрэггүй. «Secret Access Key» хэсгийн утгыг буулга.')
+            return 1
+        if secret == access:
+            print('  ✗ Secret-ийн оронд Access key ID дахин орсон байна.')
+            return 1
+        if 'r2.cloudflarestorage.com' in endpoint:
+            if len(access) != 32:
+                print('  ⚠ R2-ийн Access Key ID ихэвчлэн 32 тэмдэгт байдаг — буулгалт дутуу/илүү байж магадгүй.')
+            if len(secret) != 64:
+                print('  ⚠ R2-ийн Secret Access Key ихэвчлэн 64 тэмдэгт байдаг — буулгалт дутуу/илүү байж магадгүй.')
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     import django

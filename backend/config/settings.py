@@ -193,6 +193,8 @@ MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
 # өгөгдсөн үед л асна; өгөгдөөгүй бол дээрх локал FileSystemStorage хэвээр —
 # локал хөгжүүлэлт, тестэд ямар ч тохиргоо шаардахгүй. URL нь /media/... хэвээр.
 if os.getenv('MEDIA_S3_BUCKET'):
+    from botocore.config import Config as BotoConfig
+
     _s3_options = {
         'bucket_name': os.environ['MEDIA_S3_BUCKET'],
         'access_key': os.getenv('MEDIA_S3_ACCESS_KEY', ''),
@@ -200,6 +202,13 @@ if os.getenv('MEDIA_S3_BUCKET'):
         # Ижил нэртэй файл дахин орж ирвэл дарж бичихгүй, дагавар нэмнэ — локал
         # storage-тэй ижил зан төлөв (may_view нь DB дэх замтай ЯГ тааруулдаг).
         'file_overwrite': False,
+        # boto3 ≥ 1.36 хүсэлт бүрд CRC checksum, chunked trailer нэмдэг болсон нь R2 зэрэг
+        # S3-төст үйлчилгээнд PutObject-ийг унагадаг (Cloudflare-ийн зөвлөмж: when_required).
+        # AWS S3-д ч нөлөөгүй — шаардсан үед л checksum тооцно.
+        'client_config': BotoConfig(
+            request_checksum_calculation='when_required',
+            response_checksum_validation='when_required',
+        ),
     }
     # AWS биш үйлчилгээнд (R2, B2) endpoint заавал; AWS S3-д хоосон орхино.
     if os.getenv('MEDIA_S3_ENDPOINT_URL'):
