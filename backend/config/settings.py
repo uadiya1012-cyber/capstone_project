@@ -203,7 +203,8 @@ if os.getenv('MEDIA_S3_BUCKET'):
     }
     # AWS биш үйлчилгээнд (R2, B2) endpoint заавал; AWS S3-д хоосон орхино.
     if os.getenv('MEDIA_S3_ENDPOINT_URL'):
-        _s3_options['endpoint_url'] = os.environ['MEDIA_S3_ENDPOINT_URL']
+        # Төгсгөлийн '/' нь боловсруулагдах замыг '//'-тэй болгож гарын үсгийг эвддэг.
+        _s3_options['endpoint_url'] = os.environ['MEDIA_S3_ENDPOINT_URL'].rstrip('/')
     if os.getenv('MEDIA_S3_REGION'):
         _s3_options['region_name'] = os.environ['MEDIA_S3_REGION']
     STORAGES['default'] = {

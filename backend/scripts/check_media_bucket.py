@@ -39,7 +39,14 @@ def main() -> int:
             '└──────────────────────────────────────────────────────────────────┘'
         )
         os.environ['MEDIA_S3_BUCKET'] = ask('Bucket-ийн нэр')
-        os.environ['MEDIA_S3_ENDPOINT_URL'] = ask('Endpoint URL (https://...)')
+        # Dashboard-оос хуулахад төгсгөлд нь '/' эсвэл '/bucket-нэр' дагалдаж ирдэг —
+        # хоёулаа гарын үсгийн алдаа (SignatureDoesNotMatch) үүсгэдэг тул цэвэрлэнэ.
+        endpoint = ask('Endpoint URL (https://...)').rstrip('/')
+        bucket = os.environ['MEDIA_S3_BUCKET']
+        if endpoint.endswith('/' + bucket):
+            endpoint = endpoint[: -len(bucket) - 1]
+            print(f'  (endpoint-ийн төгсгөлөөс /{bucket}-г хасав)')
+        os.environ['MEDIA_S3_ENDPOINT_URL'] = endpoint
         region = ask('Бүс (R2 → auto; B2 → us-west-004 г.м.; хоосон = алгасах)')
         if region:
             os.environ['MEDIA_S3_REGION'] = region
