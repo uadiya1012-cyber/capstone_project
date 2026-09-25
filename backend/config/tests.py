@@ -15,11 +15,13 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import path
 
 from config.db_url import parse_database_url
+from config.storage import ProtectedS3Storage
 from config.views import may_view, protected_media
 from expenses.models import Expense
 
@@ -115,6 +117,94 @@ class ProtectedMediaTests(TestCase):
         """`receipts/` -ээр эхэлсэн ч гараад явах оролдлого эзэмшилд таарахгүй."""
         self.assertFalse(may_view(self.other, 'receipts/../../config/settings.py'))
         self.assertFalse(may_view(self.other, '../config/settings.py'))
+
+
+class ProtectedS3StorageTests(SimpleTestCase):
+    """
+    config/storage.py — файл bucket-д байсан ч URL нь `/media/...` хэвээр байх
+    ёстой. Энэ нь эрхийн хаалга (`protected_media`)-ыг тойрохгүй байх цорын
+    ганц баталгаа: S3Storage-ийн анхдагч `url()` нь bucket-ийн гарын үсэгтэй
+    шууд хаяг буцаадаг бөгөөд түүнийг template-д хэвлэвэл `may_view` ажиллахгүй.
+    Сүлжээнд хандахгүй — S3Storage холболтоо зөвхөн уншиж/бичихэд үүсгэдэг.
+    """
+
+    def _storage(self):
+        return ProtectedS3Storage(
+            bucket_name='test-bucket', access_key='k', secret_key='s',
+            endpoint_url='https://example.invalid',
+        )
+
+    def test_url_media_zam_butsaana(self):
+        self.assertEqual(self._storage().url(RECEIPT), f'/media/{RECEIPT}')
+
+    def test_url_kirill_temdegt_kodlono(self):
+        """Монгол нэртэй файл: хөтөч уншихуйц percent-кодлолт (FileSystemStorage-тэй ижил)."""
+        self.assertEqual(
+            self._storage().url('avatars/зураг 1.png'),
+            '/media/avatars/%D0%B7%D1%83%D1%80%D0%B0%D0%B3%201.png',
+        )
+
+    @override_settings(MEDIA_URL='/files')
+    def test_media_url_tegsh_zuraasgui_bol_nemne(self):
+        self.assertEqual(self._storage().url(AVATAR), f'/files/{AVATAR}')
+
+
+_BUCKET_STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.InMemoryStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
+
+
+@override_settings(ROOT_URLCONF=__name__, STORAGES=_BUCKET_STORAGES, SECURE_SSL_REDIRECT=False)
+class ProtectedMediaBucketTests(TestCase):
+    """
+    Media локал диск дээр БИШ үед (production-ы bucket) `protected_media` файлыг
+    storage-оос өөрөө уншиж дамжуулна. Жинхэнэ bucket-ийн оронд Django-ийн
+    InMemoryStorage: тэр ч FileSystemStorage биш тул view-ийн яг тэр салбар
+    ажиллана, сүлжээ/нууц түлхүүр хэрэггүй.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.owner = User.objects.create_user('b_owner', password='Test1234!')
+        cls.other = User.objects.create_user('b_other', password='Test1234!')
+        cls.staff = User.objects.create_user('b_staff', password='Test1234!', is_staff=True)
+
+    def setUp(self):
+        # Файлыг тест бүрд шинээр бичнэ — InMemoryStorage-ийн агуулга тестүүдийн
+        # хооронд хадгалагддаг тул нэр давхцахаас дагавар нэмэгдэнэ (file_overwrite=False).
+        self.expense = Expense.objects.create(
+            user=self.owner, amount='9900.00', date='2026-09-25', description='Bucket тест',
+            receipt=SimpleUploadedFile('bill.jpg', b'jpeg-bytes', content_type='image/jpeg'),
+        )
+        self.path = self.expense.receipt.name
+
+    def test_url_media_zam(self):
+        self.assertTrue(self.path.startswith('receipts/'), self.path)
+        self.assertEqual(self.expense.receipt.url, f'/media/{self.path}')
+
+    def test_ezen_barimtaa_storage_oos_unshina(self):
+        self.client.force_login(self.owner)
+        r = self.client.get(f'/media/{self.path}')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(b''.join(r.streaming_content), b'jpeg-bytes')
+        self.assertEqual(r['Content-Type'], 'image/jpeg')
+
+    def test_busad_kheregleegch_404(self):
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(f'/media/{self.path}').status_code, 404)
+
+    def test_staff_bugdiig_kharna(self):
+        self.client.force_login(self.staff)
+        r = self.client.get(f'/media/{self.path}')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(b''.join(r.streaming_content), b'jpeg-bytes')
+
+    def test_baikhgui_file_404(self):
+        """Эрх байгаа ч файл storage-д алга (жишээ: диск цэвэрлэгдсэн үеийн хуучин DB мөр)."""
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get('/media/avatars/alga.png').status_code, 404)
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)

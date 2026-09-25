@@ -188,6 +188,29 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
 MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
 
+# Production-д media-г S3-төст bucket-д хадгална (config/storage.py): Render-ийн
+# үнэгүй диск deploy, restart, 15 мин унтах бүрд цэвэрлэгддэг. MEDIA_S3_BUCKET
+# өгөгдсөн үед л асна; өгөгдөөгүй бол дээрх локал FileSystemStorage хэвээр —
+# локал хөгжүүлэлт, тестэд ямар ч тохиргоо шаардахгүй. URL нь /media/... хэвээр.
+if os.getenv('MEDIA_S3_BUCKET'):
+    _s3_options = {
+        'bucket_name': os.environ['MEDIA_S3_BUCKET'],
+        'access_key': os.getenv('MEDIA_S3_ACCESS_KEY', ''),
+        'secret_key': os.getenv('MEDIA_S3_SECRET_KEY', ''),
+        # Ижил нэртэй файл дахин орж ирвэл дарж бичихгүй, дагавар нэмнэ — локал
+        # storage-тэй ижил зан төлөв (may_view нь DB дэх замтай ЯГ тааруулдаг).
+        'file_overwrite': False,
+    }
+    # AWS биш үйлчилгээнд (R2, B2) endpoint заавал; AWS S3-д хоосон орхино.
+    if os.getenv('MEDIA_S3_ENDPOINT_URL'):
+        _s3_options['endpoint_url'] = os.environ['MEDIA_S3_ENDPOINT_URL']
+    if os.getenv('MEDIA_S3_REGION'):
+        _s3_options['region_name'] = os.environ['MEDIA_S3_REGION']
+    STORAGES['default'] = {
+        'BACKEND': 'config.storage.ProtectedS3Storage',
+        'OPTIONS': _s3_options,
+    }
+
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Нэвтрэх хуудас нь accounts/urls.py-д `path('', ...)` дээр байдаг тул бодит зам нь

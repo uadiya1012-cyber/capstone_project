@@ -5,9 +5,13 @@
 байршуулалтын (deployment) шаардлагаас үүдсэн хоёр зүйл энд байна.
 """
 
+import mimetypes
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse
+from django.core.exceptions import SuspiciousOperation
+from django.core.files.storage import FileSystemStorage, storages
+from django.http import FileResponse, Http404, HttpResponse
 from django.views.static import serve
 
 from expenses.models import Expense
@@ -86,9 +90,23 @@ def protected_media(request, path):
     болохгүй" гэж хэлэх нь өөрөө мэдээлэл тараах (баримт хэзээ үүссэн,
     хэн үүсгэсэн г.м. таамаглах боломж) тул байхгүй гэж хариулна.
 
-    `serve()` нь `safe_join` ашигладаг тул `../` -аар MEDIA_ROOT-оос гарах
-    оролдлого (path traversal) өөрөө хаагддаг.
+    Хаанаас уншихаа storage-оос шийднэ:
+      • локал диск (FileSystemStorage) — Django-ийн `serve()`: `safe_join`-оор
+        `../` (path traversal) хаагдана, Last-Modified/304 дэмжинэ;
+      • bucket (config/storage.py, production) — storage-оос өөрөө уншиж
+        дамжуулна. Ингэснээр bucket хаалттай хэвээр, эрхийн шалгалт хүсэлт бүрд
+        хийгдэнэ. Файл нь зураг (хэдэн MB) тул дамжуулалт хүнд биш. Байхгүй
+        файл (`FileNotFoundError`) ба `../`-тэй зам (`SuspiciousOperation`,
+        django-storages-ийн safe_join) хоёулаа 404 — дээрх зарчим.
     """
     if not may_view(request.user, path):
         raise Http404
-    return serve(request, path, document_root=settings.MEDIA_ROOT)
+    storage = storages['default']
+    if isinstance(storage, FileSystemStorage):
+        return serve(request, path, document_root=settings.MEDIA_ROOT)
+    try:
+        f = storage.open(path, 'rb')
+    except (FileNotFoundError, SuspiciousOperation):
+        raise Http404
+    content_type, _ = mimetypes.guess_type(path)
+    return FileResponse(f, content_type=content_type or 'application/octet-stream')

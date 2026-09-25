@@ -75,6 +75,11 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8020/api/v1
 | `DATABASE_URL` | Neon-ийн мөр | `?sslmode=require` байвал хэрэглэнэ, үгүй бол `DB_SSLMODE` (анхдагч `require`) |
 | `WEB_CONCURRENCY` | `2` | gunicorn worker (үнэгүй 512 MB-д 2 хангалттай) |
 | `SECURE_SSL_REDIRECT` | `True` (анхдагч) | http → https |
+| `MEDIA_S3_BUCKET` | bucket-ийн нэр | Өгвөл media bucket-д хадгалагдана (§6); өгөхгүй бол Render-ийн түр диск |
+| `MEDIA_S3_ENDPOINT_URL` | `https://<account_id>.r2.cloudflarestorage.com` | R2, B2 зэрэг AWS биш үйлчилгээнд заавал |
+| `MEDIA_S3_ACCESS_KEY` / `MEDIA_S3_SECRET_KEY` | bucket-ийн API түлхүүр | Зөвхөн энэ bucket-д эрхтэй түлхүүр үүсгэ |
+| `MEDIA_S3_REGION` | `auto` (R2) / bucket-ийн бүс (B2) | Үйлчилгээний зааснаар; AWS-д бүсийн нэр |
+| `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Gmail хаяг / app password | Бүртгүүлэх урсгалын баталгаажуулах захиа. Өгөхгүй бол зочин бүртгүүлж чадахгүй (нэвтрэх л ажиллана) |
 
 ## 5. Анхаарах зүйлс
 
@@ -82,9 +87,36 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8020/api/v1
   compute ч 5 минутын дараа унтдаг (сэрэхэд ~1 сек).
 - **Media (аватар, баримтын зураг):** `/media/...` замыг production-д `config/views.py`-ийн
   `protected_media` view үйлчилнэ — нэвтрэлт шаардаж, `may_view()` дотор эзэмшлийг шалгана
-  (баримт бол хувийн санхүүгийн бичиг баримт тул зөвхөн эзэн + админ харна). Гэхдээ **файлууд
-  Render-ийн үнэгүй дискэнд түр хадгалагдаж, deploy бүрд устдаг** — тогтвортой хадгалалт
-  хэрэгтэй бол Cloudinary/S3 руу шилжүүлнэ (ирээдүйн ажил).
+  (баримт бол хувийн санхүүгийн бичиг баримт тул зөвхөн эзэн + админ харна). Өгөгдмөлөөр
+  файлууд Render-ийн үнэгүй дискэнд түр хадгалагдана — **deploy, restart болон 15 минут
+  идэвхгүй болж унтах бүрд устна** (Render-ийн баримт: үнэгүй instance-д persistent disk
+  холбох боломжгүй). Тогтвортой хадгалалт: §6 — S3-төст bucket, код бэлэн.
 - **Локал production симуляци** (бодит нууц үггүй):
   `DEBUG=False SECRET_KEY=<түр> DATABASE_URL=<Neon> python manage.py check --deploy`
 - Локал хөгжүүлэлт өөрчлөгдөөгүй: `docker compose up` (runserver, DEBUG=True, порт 8020).
+
+## 6. Media-г bucket-д — тогтвортой хадгалалт
+
+Render-ийн үнэгүй instance persistent disk холбож чадахгүй тул аватар, баримтын зургийг
+S3 протоколтой bucket-д хадгална (`config/storage.py`, `django-storages`). Код бэлэн:
+bucket үүсгээд орчны хувьсагч өгөхөд л асна, өгөхгүй бол өмнөх шигээ түр дискэнд.
+
+**Ямар үйлчилгээ:** үнэгүй багцтай хоёр сонголт — **Cloudflare R2** (10 GB) эсвэл
+**Backblaze B2** (10 GB); хоёулаа S3 API-тай. Bucket-ийг **private** үүсгэ. Нийтэд нээх,
+CORS тохируулах шаардлагагүй: Django файлыг өөрөө уншиж `/media/...`-аар дамжуулдаг тул
+эрхийн шалгалт (`may_view`) хэвээр ажиллана, bucket-ийн шууд хаяг хаана ч харагдахгүй.
+
+1. Bucket үүсгэ (жишээ нь `capstone-media`), private. Бүс: боломжтой бол Азийн ойролцоо.
+2. Зөвхөн энэ bucket-д унших/бичих эрхтэй API түлхүүр (access key + secret) үүсгэ.
+3. Render → Environment: `MEDIA_S3_BUCKET`, `MEDIA_S3_ENDPOINT_URL`, `MEDIA_S3_ACCESS_KEY`,
+   `MEDIA_S3_SECRET_KEY`, шаардлагатай бол `MEDIA_S3_REGION`:
+   - R2: endpoint `https://<account_id>.r2.cloudflarestorage.com`, region `auto`;
+   - B2: endpoint `https://s3.<бүс>.backblazeb2.com` (bucket-ийн хуудсанд бичээстэй), region тэр бүс.
+   Хадгалахад Render автоматаар дахин deploy хийнэ.
+4. Шалгах: нэвтэрч аватар солих → зураг харагдана; bucket дотор `avatars/...` объект гарч
+   ирнэ; `/media/avatars/...` хаягийг зочноор нээхэд нэвтрэх хуудас руу шилжүүлнэ.
+
+Анхаар: bucket холбохоос өмнө оруулсан зургийн DB бичлэгүүд файлгүй үлдсэн (диск
+цэвэрлэгдсэн) тул тэдгээр нь эвдэрсэн хэвээр харагдана — дахин оруулна. Түлхүүрийг
+`.env`, git-д хэзээ ч бүү хий.
+
