@@ -15,12 +15,14 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
+from django.core.files.storage import FileSystemStorage, InMemoryStorage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import path
 
 from config.db_url import parse_database_url
+from config.media_check import describe, round_trip
 from config.storage import ProtectedS3Storage
 from config.views import may_view, protected_media
 from expenses.models import Expense
@@ -205,6 +207,38 @@ class ProtectedMediaBucketTests(TestCase):
         """Эрх байгаа ч файл storage-д алга (жишээ: диск цэвэрлэгдсэн үеийн хуучин DB мөр)."""
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get('/media/avatars/alga.png').status_code, 404)
+
+
+class MediaCheckTests(SimpleTestCase):
+    """config/media_check.py — scripts/check_media_bucket.py-ийн цөм. Сүлжээгүй."""
+
+    def test_lokal_storage_shalgakh_zuilgui(self):
+        steps = round_trip(FileSystemStorage(location=_MEDIA))
+        self.assertEqual(len(steps), 1)
+        self.assertFalse(steps[0].ok)
+        self.assertIn('MEDIA_S3_BUCKET', steps[0].detail)
+
+    def test_bucket_buten_ergelt(self):
+        """Bucket-ийн оронд InMemoryStorage: бичих → унших → /media/ URL → устгах бүгд ✓, файл үлдэхгүй."""
+        storage = InMemoryStorage(base_url='/media/')
+        steps = round_trip(storage)
+        self.assertEqual([s.name for s in steps], ['storage', 'бичих', 'унших', 'url', 'устгах'])
+        self.assertTrue(all(s.ok for s in steps), [(s.name, s.detail) for s in steps if not s.ok])
+        self.assertTrue(steps[1].detail.startswith('healthcheck/'))
+        self.assertFalse(storage.exists(steps[1].detail))
+
+    def test_aldaag_tokhirgoond_chigluulj_tailbarlana(self):
+        from botocore.exceptions import ClientError, EndpointConnectionError
+
+        def client_error(code):
+            return ClientError({'Error': {'Code': code, 'Message': 'x'}}, 'PutObject')
+
+        self.assertIn('MEDIA_S3_SECRET_KEY', describe(client_error('SignatureDoesNotMatch')))
+        self.assertIn('MEDIA_S3_BUCKET', describe(client_error('NoSuchBucket')))
+        self.assertIn('MEDIA_S3_ACCESS_KEY', describe(client_error('InvalidAccessKeyId')))
+        self.assertIn('эрхгүй', describe(client_error('AccessDenied')))
+        self.assertIn('MEDIA_S3_ENDPOINT_URL', describe(EndpointConnectionError(endpoint_url='https://x.invalid')))
+        self.assertIn('ValueError', describe(ValueError('юу ч биш')))
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
